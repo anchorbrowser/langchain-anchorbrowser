@@ -1,0 +1,27 @@
+[project]
+name = "langchain-anchorbrowser"
+version = "0.1.0"
+description = ""
+authors = [
+    {name = "Gil Dankner",email = "gil@anchorbrowser.io"}
+]
+readme = "README.md"
+requires-python = ">=3.11,<4.0"
+dependencies = [
+	"anchorbrowser (>=0.1.0a2)",
+	"langchain (>=0.3.27,<0.4.0)",
+	"langchain-openai (>=0.3.28,<0.4.0)"
+]
+
+[tool.poetry]
+packages = [{include = "langchain_anchorbrowser"}]
+
+
+[tool.poetry.group.test.dependencies]
+langchain-tests = "^0.3.20"
+
+[build-system]
+requires = [
+    "poetry-core>=2.0.0,<3.0.0"
+]
+build-backend = "poetry.core.masonry.api"
