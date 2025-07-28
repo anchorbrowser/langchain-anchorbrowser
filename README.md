@@ -19,7 +19,7 @@ cd langchain-anchorbrowser
 pip install -e .
 
 # Or install dependencies manually
-pip install langchain-core anchorbrowser pydantic
+pip install langchain anchorbrowser pydantic langchain-openai
 ```
 
 ## Quick Start
@@ -34,7 +34,7 @@ export ANCHORBROWSER_API_KEY="your_api_key_here"
 ### 2. Running tutorial-demo.py
 
 ```bash
-python3 langchain_anchorbrowser/tutorial-demo.py
+python3 scripts/tutorial-demo.py
 ```
 
 ## Configuration
