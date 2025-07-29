@@ -1,8 +1,5 @@
-from langchain_core.tools import BaseTool
-from pydantic import SecretStr, Field, BaseModel
-from typing import Optional, Literal
+from pydantic import SecretStr, Field
 import logging
-from langchain_core.utils import secret_from_env
 from anchorbrowser import Anchorbrowser
 import getpass
 import time
@@ -69,6 +66,13 @@ class AnchorBaseTool:
         if not function_name:
             raise ValueError(f"client_function_name not set for {self.__class__.__name__}")
         
+        # Create a new session
+        session = self.client.sessions.create()
+        live_view_url = session.data.live_view_url
+        self.logger.info(f"Session Information: {session.data}")
+        print(f"Live view URL: {live_view_url}")
+        request_body["session_id"] = session.data.id
+
         # Get the function from the client
         client_func = getattr(self.client.tools, function_name)  
         self.logger.info(f"Calling {function_name} for: {kwargs.get('url', '')}")

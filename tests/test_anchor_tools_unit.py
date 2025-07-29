@@ -77,6 +77,10 @@ class TestAnchorBaseTool(unittest.TestCase):
         mock_tools = Mock()
         mock_client.tools = mock_tools
         mock_anchorbrowser.return_value = mock_client
+        mock_session = Mock()
+        mock_session.data.id = "test_session_id"
+        mock_session.data.live_view_url = "test_live_view_url"
+        mock_client.sessions.create.return_value = mock_session
         
         # Mock the client function
         mock_function = Mock(return_value="test_result")
@@ -89,7 +93,7 @@ class TestAnchorBaseTool(unittest.TestCase):
         result = tool._run(url="https://example.com", param="value")
         
         self.assertEqual(result, "test_result")
-        mock_function.assert_called_once_with(url="https://example.com", param="value")
+        mock_function.assert_called_once_with(url="https://example.com", param="value", session_id="test_session_id")
     
     @patch('langchain_anchorbrowser.AnchorBaseTool.getpass.getpass')
     @patch('langchain_anchorbrowser.AnchorBaseTool.Anchorbrowser')
@@ -119,6 +123,10 @@ class TestAnchorBaseTool(unittest.TestCase):
         mock_tools = Mock()
         mock_client.tools = mock_tools
         mock_anchorbrowser.return_value = mock_client
+        mock_session = Mock()
+        mock_session.data.id = "test_session_id"
+        mock_session.data.live_view_url = "test_live_view_url"
+        mock_client.sessions.create.return_value = mock_session
         
         mock_function = Mock(return_value="test_result")
         mock_tools.test_function = mock_function
@@ -129,8 +137,8 @@ class TestAnchorBaseTool(unittest.TestCase):
         tool = TestTool()
         tool._run(url="https://example.com", param1="value", param2=None, param3="value3")
         
-        # Should only pass non-None values
-        mock_function.assert_called_once_with(url="https://example.com", param1="value", param3="value3")
+        # Should only pass non-None values plus session_id
+        mock_function.assert_called_once_with(url="https://example.com", param1="value", param3="value3", session_id="test_session_id")
 
 
 class TestAnchorContentTool(unittest.TestCase):
@@ -177,6 +185,10 @@ class TestAnchorContentTool(unittest.TestCase):
         mock_tools = Mock()
         mock_client.tools = mock_tools
         mock_anchorbrowser.return_value = mock_client
+        mock_session = Mock()
+        mock_session.data.id = "test_session_id"
+        mock_session.data.live_view_url = "test_live_view_url"
+        mock_client.sessions.create.return_value = mock_session
         
         mock_function = Mock(return_value="<html>Test content</html>")
         mock_tools.fetch_webpage = mock_function
@@ -185,7 +197,7 @@ class TestAnchorContentTool(unittest.TestCase):
         result = tool._run(url="https://example.com", format="html")
         
         self.assertEqual(result, "<html>Test content</html>")
-        mock_function.assert_called_once_with(url="https://example.com", format="html")
+        mock_function.assert_called_once_with(url="https://example.com", format="html", session_id="test_session_id")
 
 
 class TestAnchorScreenshotTool(unittest.TestCase):
@@ -244,6 +256,10 @@ class TestAnchorScreenshotTool(unittest.TestCase):
         mock_tools = Mock()
         mock_client.tools = mock_tools
         mock_anchorbrowser.return_value = mock_client
+        mock_session = Mock()
+        mock_session.data.id = "test_session_id"
+        mock_session.data.live_view_url = "test_live_view_url"
+        mock_client.sessions.create.return_value = mock_session
         
         mock_response = Mock()
         mock_response.text.return_value = "screenshot_data"
@@ -254,7 +270,7 @@ class TestAnchorScreenshotTool(unittest.TestCase):
         result = tool._run(url="https://example.com", width=1920, height=1080)
         
         self.assertEqual(result, "screenshot_data")
-        mock_function.assert_called_once_with(url="https://example.com", width=1920, height=1080)
+        mock_function.assert_called_once_with(url="https://example.com", width=1920, height=1080, session_id="test_session_id")
 
 
 class TestAnchorWebTaskTools(unittest.TestCase):
@@ -349,6 +365,10 @@ class TestAnchorWebTaskTools(unittest.TestCase):
         mock_tools = Mock()
         mock_client.tools = mock_tools
         mock_anchorbrowser.return_value = mock_client
+        mock_session = Mock()
+        mock_session.data.id = "test_session_id"
+        mock_session.data.live_view_url = "test_live_view_url"
+        mock_client.sessions.create.return_value = mock_session
         
         mock_response = Mock()
         mock_response.data = "task_result"
@@ -370,7 +390,8 @@ class TestAnchorWebTaskTools(unittest.TestCase):
             url="https://example.com",
             agent="browser-use",
             provider="openai",
-            model="gpt-4o-mini"
+            model="gpt-4o-mini",
+            session_id="test_session_id"
         )
     
     @patch('langchain_anchorbrowser.AnchorBaseTool.getpass.getpass')
@@ -383,6 +404,10 @@ class TestAnchorWebTaskTools(unittest.TestCase):
         mock_tools = Mock()
         mock_client.tools = mock_tools
         mock_anchorbrowser.return_value = mock_client
+        mock_session = Mock()
+        mock_session.data.id = "test_session_id"
+        mock_session.data.live_view_url = "test_live_view_url"
+        mock_client.sessions.create.return_value = mock_session
         
         mock_response = Mock()
         mock_response.data = "task_result"
@@ -395,7 +420,8 @@ class TestAnchorWebTaskTools(unittest.TestCase):
         # Should add default URL and modify prompt
         mock_function.assert_called_once_with(
             prompt="Search for Python. Ignore the starting url.",
-            url="https://example.com"
+            url="https://example.com",
+            session_id="test_session_id"
         )
 
 
