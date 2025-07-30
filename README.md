@@ -28,14 +28,14 @@ don't have Anchor's API Key yet? [register here](https://anchorbrowser.io/).
 ### 2. Running tutorial-demo.py
 
 ```bash
-from langchain-anchorbrowser import AnchorContentTool
+from langchain_anchorbrowser import AnchorContentTool
 # Use content tool
 content_result = AnchorContentTool().invoke({
     "url": "https://www.anchorbrowser.io",
     "format": "markdown"
 })
 
-print(content_result.text)
+print(content_result)
 ```
 
 ## Testing
