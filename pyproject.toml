@@ -1,7 +1,7 @@
 [project]
 name = "langchain-anchorbrowser"
 version = "0.1.0a1"
-description = ""
+description = "Anchor Browser tools for LangChain"
 authors = [
     {name = "Gil Dankner",email = "gil@anchorbrowser.io"}
 ]

@@ -1,4 +1,4 @@
-from langchain_anchorbrowser.AnchorBaseTool import AnchorBaseTool
+from .AnchorBaseTool import AnchorBaseTool
 from langchain_core.tools import BaseTool
 from pydantic import Field, BaseModel
 from typing import Optional, Literal
