@@ -2,9 +2,7 @@ import sys
 import os
 sys.path.append(os.path.abspath(os.path.join(os.getcwd(), "..", "src")))
 
-from langchain_anchorbrowser.AnchorWebTaskTool import AnchorWebTaskToolKit
-from langchain_anchorbrowser.AnchorScreenshotTool import AnchorScreenshotTool
-from langchain_anchorbrowser.AnchorContentTool import AnchorContentTool
+from langchain_anchorbrowser import AnchorWebTaskToolKit, AnchorScreenshotTool, AnchorContentTool
 
 from langchain.agents import AgentExecutor, create_openai_functions_agent
 from langchain.prompts import ChatPromptTemplate, MessagesPlaceholder

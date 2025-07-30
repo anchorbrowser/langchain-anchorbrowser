@@ -1,6 +1,6 @@
 [project]
 name = "langchain-anchorbrowser"
-version = "0.1.0"
+version = "0.1.0a1"
 description = ""
 authors = [
     {name = "Gil Dankner",email = "gil@anchorbrowser.io"}
@@ -32,4 +32,7 @@ requires = [
 ]
 build-backend = "poetry.core.masonry.api"
 
-
+[project.urls]
+Homepage = "https://github.com/anchorbrowser/langchain-anchorbrowser"
+Repository = "https://github.com/anchorbrowser/langchain-anchorbrowser"
+AnchorBrowser = "https://anchorbrowser.io"
