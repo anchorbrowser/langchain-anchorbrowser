@@ -1,6 +1,6 @@
 [project]
 name = "langchain-anchorbrowser"
-version = "0.1.0a1"
+version = "0.1.0a3"
 description = "Anchor Browser tools for LangChain"
 authors = [
     {name = "Gil Dankner",email = "gil@anchorbrowser.io"}
@@ -14,7 +14,7 @@ dependencies = [
 ]
 
 [tool.poetry]
-packages = [{include = "langchain_anchorbrowser", from = "src" }]
+packages = [{include = "langchain-anchorbrowser", from = "src" }]
 
 
 [tool.poetry.group.test.dependencies]
