@@ -1,6 +1,6 @@
 import sys
 import os
-sys.path.append(os.path.abspath(os.path.join(os.getcwd(), "..")))
+sys.path.append(os.path.abspath(os.path.join(os.getcwd(), "..", "src")))
 
 from langchain_anchorbrowser.AnchorWebTaskTool import AnchorWebTaskToolKit
 from langchain_anchorbrowser.AnchorScreenshotTool import AnchorScreenshotTool
