@@ -2,14 +2,14 @@
 
 [[package]]
 name = "anchorbrowser"
-version = "0.1.0a3"
+version = "0.1.0"
 description = "The official Python library for the anchorbrowser API"
 optional = false
 python-versions = ">=3.8"
 groups = ["main"]
 files = [
-    {file = "anchorbrowser-0.1.0a3-py3-none-any.whl", hash = "sha256:e0d51b22b687bcd08b3cdacfa478a543cee8818775e54c9c34804c0271c94f77"},
-    {file = "anchorbrowser-0.1.0a3.tar.gz", hash = "sha256:02ecf86c2b7586bf394b855fcc1868d2e78b5f904ba696faf51dc615e22e781a"},
+    {file = "anchorbrowser-0.1.0-py3-none-any.whl", hash = "sha256:3941d7b4ed4323a4cb18681eee757aff541aa8559ee9adad4dcba5d446a2ede6"},
+    {file = "anchorbrowser-0.1.0.tar.gz", hash = "sha256:5fd76dd877a6ae0ea171356eff058790fd99c15d038dc9de1252edd646a56b40"},
 ]
 
 [package.dependencies]
@@ -39,14 +39,14 @@ files = [
 
 [[package]]
 name = "anyio"
-version = "4.9.0"
-description = "High level compatibility layer for multiple asynchronous event loop implementations"
+version = "4.10.0"
+description = "High-level concurrency and networking framework on top of asyncio or Trio"
 optional = false
 python-versions = ">=3.9"
 groups = ["main", "test"]
 files = [
-    {file = "anyio-4.9.0-py3-none-any.whl", hash = "sha256:9f76d541cad6e36af7beb62e978876f3b41e3e04f2c1fbf0884604c0a9c4d93c"},
-    {file = "anyio-4.9.0.tar.gz", hash = "sha256:673c0c244e15788651a4ff38710fea9675823028a6f08a5eda409e0c9840a028"},
+    {file = "anyio-4.10.0-py3-none-any.whl", hash = "sha256:60e474ac86736bbfd6f210f7a61218939c318f43f9972497381f1c5e930ed3d1"},
+    {file = "anyio-4.10.0.tar.gz", hash = "sha256:3f3fae35c96039744587aa5b8371e7e8e603c0702999535961dd336026973ba6"},
 ]
 
 [package.dependencies]
@@ -56,8 +56,6 @@ sniffio = ">=1.1"
 typing_extensions = {version = ">=4.5", markers = "python_version < \"3.13\""}
 
 [package.extras]
-doc = ["Sphinx (>=8.2,<9.0)", "packaging", "sphinx-autodoc-typehints (>=1.2.0)", "sphinx_rtd_theme"]
-test = ["anyio[trio]", "blockbuster (>=1.5.23)", "coverage[toml] (>=7)", "exceptiongroup (>=1.2.0)", "hypothesis (>=4.0)", "psutil (>=5.9)", "pytest (>=7.0)", "trustme", "truststore (>=0.9.1) ; python_version >= \"3.10\"", "uvloop (>=0.21) ; platform_python_implementation == \"CPython\" and platform_system != \"Windows\" and python_version < \"3.14\""]
 trio = ["trio (>=0.26.1)"]
 
 [[package]]
@@ -2310,4 +2308,4 @@ cffi = ["cffi (>=1.11)"]
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.9,<4.0"
-content-hash = "557b94d550380acfdd9d5a35c6ec3637eefd6a24f1139affd4f2f8267ff06cbb"
+content-hash = "8899204bd815d8a54102ac6641445eb7bfbb9f1691d31fc365fc2c0124d5c77b"
