@@ -6,10 +6,10 @@ authors = [
     {name = "Gil Dankner",email = "gil@anchorbrowser.io"}
 ]
 readme = "README.md"
-requires-python = ">=3.8,<4.0"
+requires-python = ">=3.9,<4.0"
 dependencies = [
-	"anchorbrowser (>=0.1)",
-	"langchain-core (==0.3.15)",
+	"anchorbrowser",
+	"langchain-core",
 ]
 
 [tool.poetry]
