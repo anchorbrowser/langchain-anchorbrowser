@@ -69,7 +69,7 @@ class AnchorBaseTool:
         # Create a new session
         session = self.client.sessions.create()
         live_view_url = session.data.live_view_url
-        self.logger.info(f"Session Information:xccv {session.data}")
+        self.logger.info(f"Session Information: {session.data}")
         print(f"Live view URL: {live_view_url}")
         request_body["session_id"] = session.data.id
 

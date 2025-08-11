@@ -1,12 +1,12 @@
 [project]
 name = "langchain-anchorbrowser"
-version = "0.1.2"
+version = "0.1.4"
 description = "Anchor Browser tools for LangChain"
 authors = [
     {name = "Gil Dankner",email = "gil@anchorbrowser.io"}
 ]
 readme = "README.md"
-requires-python = ">=3.9,<4.0"
+requires-python = ">=3.8,<4.0"
 
 [tool.poetry]
 packages = [{include = "langchain_anchorbrowser", from = "src" }]
@@ -37,4 +37,4 @@ build-backend = "poetry.core.masonry.api"
 [project.urls]
 Homepage = "https://github.com/anchorbrowser/langchain-anchorbrowser"
 Repository = "https://github.com/anchorbrowser/langchain-anchorbrowser"
-AnchorBrowser = "https://anchorbrowser.io"
+Anchorbrowser = "https://anchorbrowser.io"
