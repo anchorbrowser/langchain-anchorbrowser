@@ -335,21 +335,21 @@ class TestAnchorTaskRunTool(unittest.TestCase):
         # Test minimal valid input
         valid_input = schema(task_id="task-123")
         self.assertEqual(valid_input.task_id, "task-123")
-        self.assertEqual(valid_input.version, "latest")
+        self.assertEqual(valid_input.version, "latest")  # Default is still "latest"
         self.assertIsNone(valid_input.session_id)
         self.assertIsNone(valid_input.inputs)
         
-        # Test full valid input
+        # Test full valid input (using version "1" as in deployment scenario and script inputs)
         full_input = schema(
             task_id="task-123",
-            version="1.0",
+            version="1",
             session_id="session-456",
-            inputs='{"ANCHOR_KEY": "value"}'
+            inputs='{"ANCHOR_TARGET_URL": "https://example.com", "ANCHOR_MAX_PAGES": "10"}'
         )
         self.assertEqual(full_input.task_id, "task-123")
-        self.assertEqual(full_input.version, "1.0")
+        self.assertEqual(full_input.version, "1")
         self.assertEqual(full_input.session_id, "session-456")
-        self.assertEqual(full_input.inputs, '{"ANCHOR_KEY": "value"}')
+        self.assertEqual(full_input.inputs, '{"ANCHOR_TARGET_URL": "https://example.com", "ANCHOR_MAX_PAGES": "10"}')
     
     @patch('langchain_anchorbrowser.AnchorBaseTool.getpass.getpass')
     @patch('langchain_anchorbrowser.AnchorBaseTool.Anchorbrowser')
@@ -371,7 +371,7 @@ class TestAnchorTaskRunTool(unittest.TestCase):
         mock_task_resource.run.return_value = mock_response
         
         tool = AnchorTaskRunTool()
-        result = tool._run(task_id="task-123", version="latest")
+        result = tool._run(task_id="task-123", version="1")
         
         result_dict = json.loads(result)
         self.assertEqual(result_dict["execution_id"], "exec-123")
@@ -379,9 +379,7 @@ class TestAnchorTaskRunTool(unittest.TestCase):
         
         mock_task_resource.run.assert_called_once_with(
             task_id="task-123",
-            version="latest",
-            session_id=None,
-            inputs=None
+            version="1"
         )
     
     @patch('langchain_anchorbrowser.AnchorBaseTool.getpass.getpass')
@@ -401,14 +399,13 @@ class TestAnchorTaskRunTool(unittest.TestCase):
         mock_task_resource.run.return_value = mock_response
         
         tool = AnchorTaskRunTool()
-        inputs_json = '{"ANCHOR_API_KEY": "secret"}'
-        tool._run(task_id="task-123", inputs=inputs_json)
+        inputs_json = '{"ANCHOR_TARGET_URL": "https://example.com", "ANCHOR_MAX_PAGES": "10"}'
+        tool._run(task_id="task-123", version="1", inputs=inputs_json)
         
         mock_task_resource.run.assert_called_once_with(
             task_id="task-123",
-            version="latest",
-            session_id=None,
-            inputs={"ANCHOR_API_KEY": "secret"}
+            version="1",
+            inputs={"ANCHOR_TARGET_URL": "https://example.com", "ANCHOR_MAX_PAGES": "10"}
         )
     
     @patch('langchain_anchorbrowser.AnchorBaseTool.getpass.getpass')
@@ -437,7 +434,7 @@ class TestAnchorTaskRunTool(unittest.TestCase):
         tool = AnchorTaskRunTool()
         
         with self.assertRaises(ValueError) as context:
-            tool._run(version="latest")
+            tool._run(version="1")
         
         self.assertIn("task_id is required", str(context.exception))
 
@@ -669,12 +666,12 @@ class TestAnchorTaskListExecutionsTool(unittest.TestCase):
         mock_http_client.get.return_value = mock_response
         
         tool = AnchorTaskListExecutionsTool()
-        tool._run(task_id="task-123", status="success", version="1.0")
+        tool._run(task_id="task-123", status="success", version="1")
         
         call_args = mock_http_client.get.call_args
         params = call_args[1]["params"]
         self.assertEqual(params["status"], "success")
-        self.assertEqual(params["version"], "1.0")
+        self.assertEqual(params["version"], "1")
     
     @patch('langchain_anchorbrowser.AnchorBaseTool.getpass.getpass')
     @patch('langchain_anchorbrowser.AnchorBaseTool.Anchorbrowser')

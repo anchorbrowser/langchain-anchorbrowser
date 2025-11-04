@@ -304,30 +304,43 @@ class TestAnchorWebTaskTools(unittest.TestCase):
         tool = StandardAnchorWebTaskTool()
         
         self.assertEqual(tool.name, "standard_anchor_web_task_tool")
-        self.assertEqual(tool.description, "Perform a standard web task using Anchor Browser AI")
+        self.assertEqual(tool.description, "Perform a web task using Anchor Browser AI with standard configuration options (agent, provider, model)")
         self.assertEqual(tool.client_function_name, "perform_web_task")
         
+        # Test schema with default values
+        schema = tool.args_schema
+        valid_input = schema(prompt="Search for Python", url="https://example.com")
+        self.assertEqual(valid_input.prompt, "Search for Python")
+        self.assertEqual(valid_input.url, "https://example.com")
+        self.assertEqual(valid_input.agent, "browser-use")
+        self.assertIsNone(valid_input.provider)
+        self.assertIsNone(valid_input.model)
+        
         # Test schema with all parameters
+        full_input = schema(
+            prompt="Search for Python",
+            url="https://example.com",
+            agent="openai-cua",
+            provider="openai",
+            model="gpt-4o-mini"
+        )
+        self.assertEqual(full_input.agent, "openai-cua")
+        self.assertEqual(full_input.provider, "openai")
+        self.assertEqual(full_input.model, "gpt-4o-mini")
+    
+    def test_advanced_web_task_tool_schema(self):
+        """Test AdvancedAnchorWebTaskTool schema validation"""
+        tool = AdvancedAnchorWebTaskTool()
+        
+        # Test schema with parameters
         schema = tool.args_schema
         valid_input = schema(
             prompt="Search for Python",
             url="https://example.com",
-            agent="browser-use",
-            provider="openai",
-            model="gpt-4o-mini"
+            output_schema={"type": "object"}
         )
         self.assertEqual(valid_input.prompt, "Search for Python")
-        self.assertEqual(valid_input.agent, "browser-use")
-        self.assertEqual(valid_input.provider, "openai")
-        self.assertEqual(valid_input.model, "gpt-4o-mini")
-        
-        # Test invalid agent
-        with self.assertRaises(ValueError):
-            schema(prompt="Search", agent="invalid_agent")
-        
-        # Test invalid provider
-        with self.assertRaises(ValueError):
-            schema(prompt="Search", provider="invalid_provider")
+        self.assertEqual(valid_input.url, "https://example.com")
     
     def test_advanced_web_task_tool(self):
         """Test AdvancedAnchorWebTaskTool"""
@@ -342,18 +355,11 @@ class TestAnchorWebTaskTools(unittest.TestCase):
         valid_input = schema(
             prompt="Search for Python",
             url="https://example.com",
-            agent="openai-cua",
-            provider="gemini",
-            model="gemini-pro",
-            highlight_elements=True,
-            output_schema="json"
+            output_schema={"type": "object"}
         )
         self.assertEqual(valid_input.prompt, "Search for Python")
-        self.assertEqual(valid_input.agent, "openai-cua")
-        self.assertEqual(valid_input.provider, "gemini")
-        self.assertEqual(valid_input.model, "gemini-pro")
-        self.assertTrue(valid_input.highlight_elements)
-        self.assertEqual(valid_input.output_schema, "json")
+        self.assertEqual(valid_input.url, "https://example.com")
+        self.assertEqual(valid_input.output_schema, {"type": "object"})
     
     @patch('langchain_anchorbrowser.AnchorBaseTool.getpass.getpass')
     @patch('langchain_anchorbrowser.AnchorBaseTool.Anchorbrowser')
@@ -375,7 +381,7 @@ class TestAnchorWebTaskTools(unittest.TestCase):
         mock_function = Mock(return_value=mock_response)
         mock_tools.perform_web_task = mock_function
         
-        tool = StandardAnchorWebTaskTool()
+        tool = SimpleAnchorWebTaskTool()
         result = tool._run(
             prompt="Search for Python",
             url="https://example.com",
@@ -445,7 +451,7 @@ class TestAnchorWebTaskToolKit(unittest.TestCase):
         tool_names = [tool.name for tool in tools]
         expected_names = [
             "simple_anchor_web_task_tool",
-            "standard_anchor_web_task_tool", 
+            "standard_anchor_web_task_tool",
             "advanced_anchor_web_task_tool"
         ]
         

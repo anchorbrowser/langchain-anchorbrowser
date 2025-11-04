@@ -32,10 +32,12 @@ try:
         "limit": "10"
     })
     tasks_data = json.loads(tasks_result)
-    print(f"Found {len(tasks_data.get('items', []))} task(s)")
-    if tasks_data.get('items'):
-        for task in tasks_data['items'][:3]:  # Show first 3
-            print(f"  - {task.get('name')} (ID: {task.get('id', 'N/A')})")
+    tasks_list = tasks_data.get('data', {}).get('tasks', [])
+    total = tasks_data.get('data', {}).get('total', 0)
+    print(f"Found {len(tasks_list)} task(s) (in page 1, total: {total})")
+    if tasks_list:
+        for task in tasks_list:  # Show first 3
+            print(f"  - {task.get('name')} (ID: {task.get('id', 'N/A')}) {"--DELETED" if task.get('deleted', False) else ""}")
 except Exception as e:
     print(f"Error listing tasks: {e}")
 
@@ -70,7 +72,8 @@ except Exception as e:
     try:
         tasks_result = list_tool.invoke({"page": "1", "limit": "10"})
         tasks_data = json.loads(tasks_result)
-        for task in tasks_data.get('items', []):
+        tasks_list = tasks_data.get('data', {}).get('tasks', [])
+        for task in tasks_list:
             if 'demo-task' in task.get('name', ''):
                 task_id = task.get('id')
                 task_name = task.get('name')
@@ -199,7 +202,9 @@ list_tool_from_kit = next(t for t in tools if t.name == "list_tasks")
 try:
     result = list_tool_from_kit.invoke({"page": "1", "limit": "3"})
     result_data = json.loads(result)
-    print(f"  Found {len(result_data.get('items', []))} task(s)")
+    tasks_list = result_data.get('data', {}).get('tasks', [])
+    total = result_data.get('data', {}).get('total', 0)
+    print(f"  Found {len(tasks_list)} task(s) (total: {total})")
 except Exception as e:
     print(f"  Error: {e}")
 

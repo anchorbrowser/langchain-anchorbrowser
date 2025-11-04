@@ -2,7 +2,7 @@ import unittest
 from unittest.mock import Mock, patch, MagicMock
 import sys
 import os
-import json
+import time
 
 # Add the src directory to the path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
@@ -11,6 +11,8 @@ from langchain_anchorbrowser.AnchorContentTool import AnchorContentTool
 from langchain_anchorbrowser.AnchorScreenshotTool import AnchorScreenshotTool
 from langchain_anchorbrowser.AnchorWebTaskTool import (
     SimpleAnchorWebTaskTool,
+    StandardAnchorWebTaskTool,
+    AdvancedAnchorWebTaskTool,
     AnchorWebTaskToolKit
 )
 from langchain_anchorbrowser.AnchorBaseTool import AnchorClient
@@ -55,7 +57,7 @@ class TestAnchorToolsIntegration(unittest.TestCase):
         tool_names = [tool.name for tool in web_task_tools]
         expected_names = [
             "simple_anchor_web_task_tool",
-            "standard_anchor_web_task_tool", 
+            "standard_anchor_web_task_tool",
             "advanced_anchor_web_task_tool"
         ]
         self.assertEqual(tool_names, expected_names)
@@ -82,7 +84,7 @@ class TestAnchorToolsIntegration(unittest.TestCase):
         
         # Create a tool - should use environment variable
         tool = AnchorContentTool()
-        
+        tool.invoke({"url": "https://example.com"})
         # Verify environment variable was used
         mock_anchorbrowser.assert_called_once_with(api_key='test_env_key')
 

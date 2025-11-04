@@ -1,4 +1,4 @@
-from pydantic import SecretStr, Field
+from pydantic import SecretStr
 import logging
 from anchorbrowser import Anchorbrowser
 import getpass
@@ -37,18 +37,39 @@ class AnchorClient:
 
 # Base configuration for all tools
 class AnchorBaseTool:
-    api_key: SecretStr = Field(default=SecretStr(""), description="API key for Anchor Browser")
-    logger: logging.Logger = Field(default=logging.getLogger(__name__), description="Logger instance")
-    client: Anchorbrowser | None = Field(default=None, description="Anchor Browser client instance")
-    client_function_name: str = None  # Will be overridden by subclasses
+    """Base class for Anchor Browser tools. Provides shared client initialization.
+    
+    This mixin works with Pydantic v2 by using lazy initialization. The client
+    is initialized on first access rather than in __init__.
+    
+    Note: Subclasses should define client_function_name as a class attribute,
+    not as a Pydantic Field, to avoid shadowing warnings.
+    """
+    _anchor_api_key: SecretStr | None = None
+    _anchor_client: Anchorbrowser | None = None
+    _anchor_logger: logging.Logger | None = None
 
-    def __init__(self, api_key: str | SecretStr | None = None):
-        super().__init__()
-        print(f"Creating {self.__class__.__name__}")
-        self.logger = logging.getLogger(__name__)
-        # Get shared API key and client instances
-        self.api_key, self.client = AnchorClient().initialize()
-        print("Using shared API key and client instances")
+    @property
+    def api_key(self) -> SecretStr:
+        """Get or initialize the API key"""
+        if self._anchor_api_key is None:
+            self._anchor_api_key, _ = AnchorClient().initialize()
+        return self._anchor_api_key
+    
+    @property
+    def client(self) -> Anchorbrowser:
+        """Get or initialize the client"""
+        if self._anchor_client is None:
+            _, self._anchor_client = AnchorClient().initialize()
+            print(f"Initialized client for {self.__class__.__name__}")
+        return self._anchor_client
+    
+    @property
+    def logger(self) -> logging.Logger:
+        """Get or initialize the logger"""
+        if self._anchor_logger is None:
+            self._anchor_logger = logging.getLogger(__name__)
+        return self._anchor_logger
 
     def _run(self, **kwargs) -> str:
         """Generic run method that calls the appropriate client function"""
