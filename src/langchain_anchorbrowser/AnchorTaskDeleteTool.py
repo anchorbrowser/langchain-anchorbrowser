@@ -3,7 +3,7 @@ import json
 from langchain_core.tools import BaseTool
 from pydantic import BaseModel, Field
 
-from .AnchorBaseTool import AnchorBaseTool, response_payload
+from .AnchorBaseTool import AnchorBaseTool
 
 
 class AnchorTaskDeleteTool(AnchorBaseTool, BaseTool):
@@ -18,7 +18,5 @@ class AnchorTaskDeleteTool(AnchorBaseTool, BaseTool):
 
     def _run(self, **kwargs) -> str:
         task_id = kwargs["task_id"]
-        result = self.client.tasks_legacy.delete_task(task_id)
-
-        data = response_payload(result) or {"success": True, "task_id": task_id}
-        return json.dumps(data, indent=2, default=str)
+        self.client.tasks_legacy.delete_task(task_id)
+        return json.dumps({"success": True, "task_id": task_id}, indent=2)

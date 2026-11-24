@@ -179,13 +179,15 @@ class TestTaskTools(AnchorAPITestCase):
         self.assertEqual(self.api.calls("GET", f"/v1/task/{TASK_ID}/executions")[0].query,
                          {"page": "1", "limit": "10"})
 
-    def test_create_task_sends_the_task(self):
+    def test_create_task_sends_the_task_and_returns_the_response_body(self):
         task = {"id": TASK_ID, "name": "demo", "language": "typescript", "latestVersion": "draft",
                 "createdAt": "2026-01-01T00:00:00Z"}
         self.api.route_json("POST", "/v1/task", {"data": task})
 
-        AnchorTaskCreateTool().invoke({"name": "demo", "description": "A demo", "code": "ZXhwb3J0IHt9"})
+        result = json.loads(AnchorTaskCreateTool().invoke(
+            {"name": "demo", "description": "A demo", "code": "ZXhwb3J0IHt9"}))
 
+        self.assertEqual(result, {"data": task})
         self.assertEqual(self.api.calls("POST", "/v1/task")[0].json(),
                          {"name": "demo", "description": "A demo", "code": "ZXhwb3J0IHt9", "language": "typescript"})
 
@@ -193,9 +195,10 @@ class TestTaskTools(AnchorAPITestCase):
         run = {"success": True, "taskId": TASK_ID, "async": False, "executionTime": 1234, "output": "done"}
         self.api.route_json("POST", "/v1/task/run", {"data": run})
 
-        AnchorTaskRunTool().invoke(
-            {"task_id": TASK_ID, "version": "1", "inputs": '{"ANCHOR_TARGET_URL": "https://example.com"}'})
+        result = json.loads(AnchorTaskRunTool().invoke(
+            {"task_id": TASK_ID, "version": "1", "inputs": '{"ANCHOR_TARGET_URL": "https://example.com"}'}))
 
+        self.assertEqual(result, {"data": run})
         self.assertEqual(self.api.calls("POST", "/v1/task/run")[0].json(), {
             "taskId": TASK_ID, "version": "1", "inputs": {"ANCHOR_TARGET_URL": "https://example.com"},
         })
@@ -209,10 +212,20 @@ class TestTaskTools(AnchorAPITestCase):
     def test_deploy_task_sends_the_new_version(self):
         self.api.route_json("POST", f"/v1/task/{TASK_ID}/deploy", {"data": {"id": "ver-1", "version": "1"}})
 
-        AnchorTaskDeployTool().invoke({"task_id": TASK_ID, "code": "ZXhwb3J0IHt9", "description": "v1"})
+        result = json.loads(AnchorTaskDeployTool().invoke(
+            {"task_id": TASK_ID, "code": "ZXhwb3J0IHt9", "description": "v1"}))
 
+        self.assertEqual(result, {"data": {"id": "ver-1", "version": "1"}})
         self.assertEqual(self.api.calls("POST", f"/v1/task/{TASK_ID}/deploy")[0].json(),
                          {"code": "ZXhwb3J0IHt9", "language": "typescript", "description": "v1"})
+
+    def test_delete_task_reports_success(self):
+        self.api.route_json("DELETE", f"/v1/task/{TASK_ID}", {"data": {"message": "Task deleted successfully"}})
+
+        result = json.loads(AnchorTaskDeleteTool().invoke({"task_id": TASK_ID}))
+
+        self.assertEqual(result, {"success": True, "task_id": TASK_ID})
+        self.assertEqual(len(self.api.calls("DELETE", f"/v1/task/{TASK_ID}")), 1)
 
     def test_delete_task_raises_when_the_task_does_not_exist(self):
         self.api.route_json("DELETE", f"/v1/task/{TASK_ID}", {"error": {"code": 404}}, status=404)

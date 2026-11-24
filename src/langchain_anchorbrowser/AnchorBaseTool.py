@@ -41,20 +41,12 @@ class AnchorClient:
 
 
 def response_payload(response: Any) -> Any:
-    """Return the JSON payload of an anchorbrowser SDK response.
+    """Return the JSON body of an anchorbrowser SDK response as the API sent it.
 
-    Several legacy task endpoints return their payload at the top level instead
-    of under ``data``; the SDK models keep those keys as extra fields.
-    Empty responses (e.g. HTTP 204) come back as ``""`` and yield ``{}``.
     The SDK builds models without validation, so typed fields (UUIDs, datetimes)
     still hold raw strings; serializer warnings about that are suppressed.
     """
-    data = getattr(response, "data", None)
-    if data is not None:
-        return data.model_dump(warnings=False)
-    if hasattr(response, "model_dump"):
-        return response.model_dump(exclude={"data"}, warnings=False)
-    return {}
+    return response.model_dump(by_alias=True, exclude_unset=True, warnings=False)
 
 
 class AnchorBaseTool:

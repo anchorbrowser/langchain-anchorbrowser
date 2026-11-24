@@ -60,8 +60,7 @@ try:
         "language": "typescript",
         "code": task_code
     })
-    create_data = json.loads(create_result)
-    task_id = create_data.get("id")
+    task_id = json.loads(create_result).get("data", {}).get("id")
     print("Task created successfully!")
     print(f"Task ID: {task_id}")
     print(f"Task Name: {task_name}")
@@ -99,10 +98,10 @@ try:
         "task_id": task_id,
         "code": task_code
     })
-    deploy_data = json.loads(deploy_result)
+    version = json.loads(deploy_result).get("data", {}).get("version")
     print("Task deployed successfully!")
-    if deploy_data.get("version"):
-        print(f"Version: {deploy_data.get('version')}")
+    if version:
+        print(f"Version: {version}")
 except Exception as e:
     print(f"Deploy failed (task may already have code deployed): {e}")
 
@@ -124,13 +123,11 @@ try:
         # session_id is not passed - system will create a new session automatically
         "inputs": inputs_json  # Optional: environment variables (keys must start with ANCHOR_)
     })
-    run_data = json.loads(run_result)
+    run_data = json.loads(run_result).get("data", {})
     print("Task execution started!")
-    execution_id = run_data.get("execution_id") or run_data.get("id")
-    if execution_id:
-        print(f"Execution ID: {execution_id}")
-    if run_data.get("status"):
-        print(f"Status: {run_data.get('status')}")
+    if run_data.get("executionResultId"):
+        print(f"Execution ID: {run_data['executionResultId']}")
+    print(f"Success: {run_data.get('success')} ({run_data.get('message')})")
 except Exception as e:
     print(f"Run task error: {e}")
 
