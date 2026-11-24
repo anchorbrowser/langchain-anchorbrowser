@@ -134,6 +134,11 @@ class TestWebTaskTools(AnchorAPITestCase):
         body = self.sent_body()
         self.assertEqual((body["agent"], body["provider"], body["model"]), ("openai-cua", "openai", "gpt-4o"))
 
+    def test_standard_task_without_options_sends_only_prompt_and_url(self):
+        StandardAnchorWebTaskTool().invoke({"prompt": "Read the heading", "url": "https://example.com"})
+
+        self.assertEqual(self.sent_body(), {"prompt": "Read the heading", "url": "https://example.com"})
+
     def test_advanced_task_sends_the_output_schema(self):
         schema = {"type": "object", "properties": {"heading": {"type": "string"}}}
 
@@ -231,7 +236,7 @@ class TestTaskTools(AnchorAPITestCase):
 
         self.assertEqual(result, {"data": {"id": "ver-1", "version": "1"}})
         self.assertEqual(self.api.calls("POST", f"/v1/task/{TASK_ID}/deploy")[0].json(),
-                         {"code": "ZXhwb3J0IHt9", "language": "typescript", "description": "v1"})
+                         {"code": "ZXhwb3J0IHt9", "description": "v1"})
 
     def test_delete_task_reports_success(self):
         self.api.route_json("DELETE", f"/v1/task/{TASK_ID}", {"data": {"message": "Task deleted successfully"}})

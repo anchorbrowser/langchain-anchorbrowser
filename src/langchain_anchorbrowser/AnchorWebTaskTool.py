@@ -23,7 +23,7 @@ class StandardAnchorWebTaskTool(AnchorBaseTool, BaseTool):
     class StandardWebTaskInputSchema(BaseModel):
         prompt: str = Field(description="The task prompt to execute")
         url: str | None = Field(default=None, description="Starting URL for the task (default: https://example.com)")
-        agent: str = Field(default="browser-use", description="The AI agent to use (browser-use, openai-cua, or gemini-computer-use, default: browser-use)")
+        agent: str | None = Field(default=None, description="The AI agent to use (browser-use, openai-cua, or gemini-computer-use, default: browser-use)")
         provider: str | None = Field(default=None, description="The AI provider to use (openai, gemini, groq, azure, xai)")
         model: str | None = Field(default=None, description="The specific model to use for task completion")
 

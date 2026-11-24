@@ -12,7 +12,7 @@ class AnchorTaskDeployTool(AnchorBaseTool, BaseTool):
     class TaskDeployInputSchema(BaseModel):
         task_id: str = Field(description="The ID of the task to deploy - required")
         code: str | None = Field(default=None, description="Base64 encoded task code (required for new versions)")
-        language: str | None = Field(default="typescript", description="Programming language for the task (default: 'typescript')")
+        language: str | None = Field(default=None, description="Programming language for the task (default: 'typescript')")
         description: str | None = Field(default=None, description="Optional description of the version")
 
     args_schema: type[BaseModel] = TaskDeployInputSchema

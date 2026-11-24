@@ -121,7 +121,7 @@ The tools log to the `langchain_anchorbrowser` logger. Only session ids are logg
 ### 0.3.0
 
 - **Compatibility**: requires `langchain-core >=1.0`, `anchorbrowser >=1.0` and Python 3.10+ (drops the old `<0.4` pin that blocked modern LangChain stacks).
-  - LangChain 1.x passes schema defaults to tools. The web task tools' `url` and `output_schema` now default to unset, so a task without a `url` still starts on example.com with a hint to ignore it, and no empty `output_schema` is sent.
+  - langchain-core 1.3 and later pass schema defaults to tools; earlier versions do not. Options the API defaults itself (`url` and `output_schema` on the web task tools, `agent` on the standard web task tool, `language` on the deploy tool) now default to unset, so each tool sends the same request on every langchain-core 1.x. A web task without a `url` still starts on example.com with a hint to ignore it.
 - **SDK migration**: updated all tools to the anchorbrowser 1.0 SDK.
   - Session creation now uses `sessions.create_session()`.
   - Task tools now use `tasks_legacy.*` (create/list/delete/run/deploy).
