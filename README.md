@@ -2,12 +2,12 @@
 
 A LangChain integration for [Anchor Browser](https://anchorbrowser.io), providing tools to interact with web pages programmatically through AI-driven automation.
 
-Requires **langchain-core ≥ 1.0** and **anchorbrowser ≥ 1.0**.
+Requires **Python ≥ 3.10**, **langchain-core ≥ 1.0** and **anchorbrowser ≥ 1.0**.
 
 ## Features
 
-- **Content Extraction** – fetch the markdown text of any URL
-- **Screenshot Capture** – take a screenshot of any URL
+- **Content Extraction** – fetch the fully rendered HTML of any URL
+- **Screenshot Capture** – take a screenshot of any URL, returned as a base64-encoded image
 - **AI Web Tasks** – perform intelligent web tasks using the Anchor AI agent (simple, standard, and advanced modes)
 - **Task Management** – create, deploy, run, and inspect reusable browser automation tasks
 
@@ -17,10 +17,10 @@ Requires **langchain-core ≥ 1.0** and **anchorbrowser ≥ 1.0**.
 pip install langchain-anchorbrowser
 ```
 
-For agent examples you will also need an LLM package, e.g.:
+To use the tools from a LangChain agent you also need `langchain` and a model provider package, e.g.:
 
 ```bash
-pip install langchain-anchorbrowser langgraph langchain-openai
+pip install langchain-anchorbrowser langchain langchain-openai
 ```
 
 ## Quick Start
@@ -36,18 +36,24 @@ No key yet? [Sign up at anchorbrowser.io](https://anchorbrowser.io).
 ### 2. Direct tool usage
 
 ```python
+import base64
+
 from langchain_anchorbrowser import AnchorContentTool, AnchorScreenshotTool, SimpleAnchorWebTaskTool
 
-# Fetch page content
-content = AnchorContentTool().invoke({"url": "https://example.com"})
-print(content)
+# Fetch the rendered HTML of a page
+html = AnchorContentTool().invoke({"url": "https://example.com"})
+print(html[:300])
 
-# Take a screenshot (returns binary image data as a string)
-screenshot = AnchorScreenshotTool().invoke({
+# Take a screenshot (returns the image as a base64 string)
+encoded = AnchorScreenshotTool().invoke({
     "url": "https://example.com",
     "width": 1280,
     "height": 720,
 })
+image = base64.b64decode(encoded)
+extension = "png" if image.startswith(b"\x89PNG") else "jpg"
+with open(f"screenshot.{extension}", "wb") as f:
+    f.write(image)
 
 # Perform an AI-driven web task
 result = SimpleAnchorWebTaskTool().invoke({
@@ -60,26 +66,22 @@ print(result)
 ### 3. Using with a LangChain agent
 
 ```python
-import os
-from langgraph.prebuilt import create_react_agent
-from langchain.chat_models import init_chat_model
-from langchain_anchorbrowser import AnchorContentTool, AnchorScreenshotTool, SimpleAnchorWebTaskTool
+from langchain.agents import create_agent
+from langchain_anchorbrowser import AnchorContentTool, SimpleAnchorWebTaskTool
 
-llm = init_chat_model("gpt-4o-mini", model_provider="openai")
-
-tools = [
-    AnchorContentTool(),
-    AnchorScreenshotTool(),
-    SimpleAnchorWebTaskTool(),
-]
-
-agent = create_react_agent(llm, tools)
+agent = create_agent(
+    "openai:gpt-4o-mini",
+    tools=[AnchorContentTool(), SimpleAnchorWebTaskTool()],
+    system_prompt="You browse the web with Anchor Browser tools.",
+)
 
 result = agent.invoke({
-    "messages": [{"role": "user", "content": "Summarise the homepage of example.com"}]
+    "messages": [{"role": "user", "content": "What is the main heading on https://example.com?"}]
 })
 print(result["messages"][-1].content)
 ```
+
+The screenshot tool is intended for direct use: its base64 output is large and not useful as text in a model's context.
 
 See `examples/agent_example.py` for a complete runnable script.
 
@@ -87,8 +89,8 @@ See `examples/agent_example.py` for a complete runnable script.
 
 | Tool | Description |
 |------|-------------|
-| `AnchorContentTool` | Fetch the text content of a URL |
-| `AnchorScreenshotTool` | Take a screenshot of a URL |
+| `AnchorContentTool` | Fetch the fully rendered HTML of a URL |
+| `AnchorScreenshotTool` | Take a screenshot of a URL (base64-encoded PNG or JPEG) |
 | `SimpleAnchorWebTaskTool` | Run an AI browser task (prompt + start URL) |
 | `StandardAnchorWebTaskTool` | Same, with explicit agent/provider/model selection |
 | `AdvancedAnchorWebTaskTool` | Same, with a structured output schema |
@@ -104,19 +106,31 @@ Toolkit helpers that bundle related tools:
 - `AnchorWebTaskToolKit` – Simple + Standard + Advanced web task tools
 - `AnchorTaskToolKit` – All task management tools
 
+### Browser sessions and logging
+
+The screenshot and web task tools create a browser session for each call and delete it when the call finishes, including when it fails. The content tool does not need a session.
+
+The tools log to the `langchain_anchorbrowser` logger. Only session ids are logged, never connection URLs.
+
 ## Changelog
 
-### 0.3.0 (2026-11-24)
+### 0.3.0
 
-- **Compatibility**: requires `langchain-core >=1.0` and `anchorbrowser >=1.0` (drops the old `<0.4` pin that blocked modern LangChain stacks).
+- **Compatibility**: requires `langchain-core >=1.0`, `anchorbrowser >=1.0` and Python 3.10+ (drops the old `<0.4` pin that blocked modern LangChain stacks).
 - **SDK migration**: updated all tools to the anchorbrowser 1.0 SDK.
   - Session creation now uses `sessions.create_session()`.
   - Task tools now use `tasks_legacy.*` (create/list/delete/run/deploy).
   - Delete, deploy, and list-executions tools migrated from raw `httpx` calls to SDK methods.
   - `AnchorContentTool` no longer creates a browser session (the `fetch_webpage` endpoint is session-free).
-- **Result handling**: `perform_web_task` now returns the structured result dict from `PerformWebTaskSyncResponseData`; async responses return status and workflow ID.
-- **Examples**: added `examples/agent_example.py` with a `create_react_agent` (LangGraph) pattern.
-- **Tests**: all existing unit tests updated and new tests added for the SDK-method contracts (58 tests pass, 1 live-API test skipped when no key is present).
+- **Fixes**
+  - `AnchorScreenshotTool` returns the image as a base64 string. It used to decode the image bytes as text, which corrupted them.
+  - Browser sessions created by the tools are now deleted after each call. Previously they were left open.
+  - The tools no longer log the full session object (which includes the CDP URL) or print the live view URL; only the session id is logged.
+  - `AnchorTaskListTool` and `AnchorTaskListExecutionsTool` returned `{}`; they now return the API payload (`tasks`, `total`, `page`, `limit` and `results`, `pagination`).
+  - `perform_web_task` returns the task result as JSON; async responses return status and workflow ID.
+- **Breaking**: `AnchorContentTool` no longer has a `format` option. The API always returned HTML, so the option had no effect; passing it is still accepted and ignored.
+- **Examples**: `examples/agent_example.py`, the tutorial script and the notebook use LangChain 1.x `create_agent`.
+- **Packaging**: removed the stale `requirements.lock` and `requirements-dev.lock` files and regenerated `poetry.lock`.
 
 ### 0.2.0
 
@@ -125,10 +139,8 @@ Initial public release.
 ## Testing
 
 ```bash
-# unit tests (no API key required)
-pip install pytest
-pytest tests/test_anchor_tools_unit.py tests/test_anchor_task_tools.py -v
-
-# live smoke test (requires ANCHORBROWSER_API_KEY)
-pytest tests/test_anchor_tools_integration.py -v
+pip install -e . pytest langchain langchain-tests
+pytest
 ```
+
+The tests mock the Anchor API and need no API key. The live smoke tests in `tests/test_anchor_tools_integration.py` run only when `ANCHORBROWSER_API_KEY` is set.
