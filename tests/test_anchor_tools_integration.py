@@ -1,3 +1,5 @@
+import base64
+import json
 import unittest
 from unittest.mock import Mock, patch
 import sys
@@ -6,6 +8,7 @@ import os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
 
 from langchain_anchorbrowser.AnchorContentTool import AnchorContentTool
+from langchain_anchorbrowser.AnchorTaskListTool import AnchorTaskListTool
 from langchain_anchorbrowser.AnchorScreenshotTool import AnchorScreenshotTool
 from langchain_anchorbrowser.AnchorWebTaskTool import (
     SimpleAnchorWebTaskTool,
@@ -103,31 +106,53 @@ class TestAnchorToolsIntegration(unittest.TestCase):
         for cls in (SimpleAnchorWebTaskTool, StandardAnchorWebTaskTool, AdvancedAnchorWebTaskTool):
             self.assertTrue(cls().needs_session, f"{cls.__name__} should need a session")
 
-    def test_real_anchor_browser_connection(self):
-        """Live smoke test against the real Anchor Browser API"""
+@unittest.skipUnless(os.environ.get("ANCHORBROWSER_API_KEY"), "ANCHORBROWSER_API_KEY not set")
+class TestLiveAnchorAPI(unittest.TestCase):
+    """Live smoke tests against the real Anchor Browser API. Any error fails the test."""
+
+    def setUp(self):
         AnchorClient._instance = None
         AnchorClient._client = None
         AnchorClient._api_key = None
 
-        content_tool = AnchorContentTool()
+    def invoke_and_check_session_closed(self, tool, tool_input):
+        sessions = tool.client.sessions
+        with patch.object(sessions, "delete_session", wraps=sessions.delete_session) as delete_session, \
+                self.assertNoLogs("langchain_anchorbrowser", level="WARNING"):
+            result = tool.invoke(tool_input)
+        delete_session.assert_called_once()
+        return result
 
-        api_key_set = bool(os.environ.get('ANCHORBROWSER_API_KEY'))
-        if not api_key_set:
-            self.skipTest("ANCHORBROWSER_API_KEY not set - skipping live smoke test")
+    def test_content_returns_html(self):
+        html = AnchorContentTool().invoke({"url": "https://example.com"})
 
-        self.assertIsNotNone(content_tool.client)
-        self.assertIsNotNone(content_tool.api_key)
+        self.assertIsInstance(html, str)
+        self.assertIn("Example Domain", html)
 
-        try:
-            result = content_tool._run(url="https://example.com")
-            self.assertIsNotNone(result)
-            self.assertIsInstance(result, str)
-            self.assertGreater(len(result), 0, "API should return non-empty content")
-        except Exception as e:
-            error_msg = str(e).lower()
-            if "connection" in error_msg or "authentication" in error_msg or "unauthorized" in error_msg:
-                self.fail(f"Connection/Authentication error: {e}")
-            # Rate-limiting or other transient errors are acceptable
+    def test_screenshot_returns_base64_image(self):
+        encoded = self.invoke_and_check_session_closed(
+            AnchorScreenshotTool(), {"url": "https://example.com", "width": 800, "height": 600})
+
+        image = base64.b64decode(encoded, validate=True)
+        self.assertGreater(len(image), 1000)
+        self.assertTrue(image.startswith((b"\xff\xd8\xff", b"\x89PNG")), "expected JPEG or PNG bytes")
+
+    def test_web_task_returns_result(self):
+        result = self.invoke_and_check_session_closed(
+            SimpleAnchorWebTaskTool(),
+            {"prompt": "What is the main heading on this page? Reply with the heading text.", "url": "https://example.com"},
+        )
+
+        payload = json.loads(result)
+        self.assertTrue(payload)
+        self.assertIn("example domain", json.dumps(payload).lower())
+
+    def test_list_tasks_returns_payload(self):
+        payload = json.loads(AnchorTaskListTool().invoke({"page": "1", "limit": "5"}))
+
+        self.assertIn("tasks", payload)
+        self.assertIsInstance(payload["tasks"], list)
+        self.assertIn("total", payload)
 
 
 if __name__ == '__main__':
