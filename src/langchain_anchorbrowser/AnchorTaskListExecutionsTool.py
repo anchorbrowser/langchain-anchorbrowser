@@ -21,12 +21,8 @@ class AnchorTaskListExecutionsTool(AnchorBaseTool, BaseTool):
     args_schema: type[BaseModel] = TaskListExecutionsInputSchema
 
     def _run(self, **kwargs) -> str:
-        task_id = kwargs.get("task_id")
-        if not task_id:
-            raise ValueError("task_id is required")
-
         list_kwargs = {
-            "task_id": task_id,
+            "task_id": kwargs["task_id"],
             "page": kwargs.get("page", "1"),
             "limit": kwargs.get("limit", "10"),
         }

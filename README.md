@@ -139,8 +139,8 @@ Initial public release.
 ## Testing
 
 ```bash
-pip install -e . pytest langchain langchain-tests
+pip install -e . pytest langchain
 pytest
 ```
 
-The tests mock the Anchor API and need no API key. The live smoke tests in `tests/test_anchor_tools_integration.py` run only when `ANCHORBROWSER_API_KEY` is set.
+The tests run the tools against a local fake of the Anchor API and need no API key. The live smoke tests in `tests/test_live_api.py` run only when `ANCHORBROWSER_API_KEY` is set.

@@ -17,10 +17,7 @@ class AnchorTaskDeleteTool(AnchorBaseTool, BaseTool):
     args_schema: type[BaseModel] = TaskDeleteInputSchema
 
     def _run(self, **kwargs) -> str:
-        task_id = kwargs.get("task_id")
-        if not task_id:
-            raise ValueError("task_id is required")
-
+        task_id = kwargs["task_id"]
         result = self.client.tasks_legacy.delete_task(task_id)
 
         data = response_payload(result) or {"success": True, "task_id": task_id}

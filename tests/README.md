@@ -1,19 +1,16 @@
 # Tests
 
-Unit and integration tests for langchain-anchorbrowser. They mock the Anchor API and need no API key.
+The tests run the tools, unmodified, against a local fake of the Anchor API (`fake_anchor_api.py`) and need no API key.
 
 ## Run Tests
 
 ```bash
-pip install -e . pytest langchain langchain-tests
+pip install -e . pytest langchain
 
-pytest tests/                                    # All tests
-pytest tests/test_anchor_tools_unit.py           # Content, screenshot and web task tools
-pytest tests/test_anchor_task_tools.py           # Task management tools
-pytest tests/test_sdk_http.py                    # Tools through the real SDK against mocked HTTP responses
-pytest tests/test_agent.py                       # Tools inside a LangChain create_agent graph
-pytest tests/test_standard.py                    # LangChain standard tool tests
-pytest tests/test_anchor_tools_integration.py    # Client setup, plus live smoke tests
+pytest tests/                       # All tests
+pytest tests/test_tools.py          # Every tool, checked by the requests it sends and what it returns
+pytest tests/test_agent.py          # Tools inside a LangChain create_agent graph
+pytest tests/test_live_api.py       # Live smoke tests
 ```
 
-The live smoke tests in `test_anchor_tools_integration.py` run only when `ANCHORBROWSER_API_KEY` is set. They call the real API and create and delete browser sessions.
+The live smoke tests run only when `ANCHORBROWSER_API_KEY` is set. They call the real API and create and delete browser sessions.

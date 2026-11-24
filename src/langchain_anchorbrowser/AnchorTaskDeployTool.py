@@ -20,11 +20,7 @@ class AnchorTaskDeployTool(AnchorBaseTool, BaseTool):
     args_schema: type[BaseModel] = TaskDeployInputSchema
 
     def _run(self, **kwargs) -> str:
-        task_id = kwargs.get("task_id")
-        if not task_id:
-            raise ValueError("task_id is required")
-
-        deploy_kwargs = {"task_id": task_id}
+        deploy_kwargs = {"task_id": kwargs["task_id"]}
         if kwargs.get("code"):
             deploy_kwargs["code"] = kwargs["code"]
         if kwargs.get("language"):

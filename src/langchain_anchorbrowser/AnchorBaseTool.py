@@ -5,7 +5,7 @@ import logging
 import os
 import threading
 import time
-from typing import Any, ClassVar
+from typing import Any
 
 from anchorbrowser import Anchorbrowser
 from pydantic import SecretStr
@@ -61,19 +61,12 @@ class AnchorBaseTool:
     """Base class for Anchor Browser tools.
 
     Provides shared client initialization and a default _run implementation
-    that creates a browser session, invokes the requested tool function and
-    closes the session again.
-
-    Class attributes:
-        client_function_name: Name of the method on ``client.tools`` to call.
-        needs_session: Set to False on tools whose underlying API endpoint
-            does not accept a ``session_id`` (e.g. ``fetch_webpage``).
+    that creates a browser session, calls ``client.tools.<client_function_name>``
+    in it and deletes the session again.
     """
     _anchor_api_key: SecretStr | None = None
     _anchor_client: Anchorbrowser | None = None
     _anchor_logger: logging.Logger | None = None
-
-    needs_session: ClassVar[bool] = True
 
     @property
     def api_key(self) -> SecretStr:
@@ -105,33 +98,22 @@ class AnchorBaseTool:
             request_body["prompt"] += ". Ignore the starting url."
 
         start_time = time.time()
-        session_id = None
-        if self.needs_session:
-            session = self.client.sessions.create_session()
-            # session.data also carries cdp_url, a credential-bearing websocket URL: never log it.
-            session_id = session.data.id if session.data else None
-            if session_id:
-                request_body["session_id"] = session_id
-                self.logger.info("Created Anchor session %s", session_id)
+        # session.data also carries cdp_url, a credential-bearing websocket URL: never log it.
+        session_id = self.client.sessions.create_session().data.id
+        self.logger.info("Created Anchor session %s", session_id)
 
         try:
             client_func = getattr(self.client.tools, function_name)
-            result = client_func(**request_body)
+            result = client_func(session_id=session_id, **request_body)
         finally:
-            if session_id:
-                self._close_session(session_id)
+            self._close_session(session_id)
 
         self.logger.info("%s completed in %.2fs", function_name, time.time() - start_time)
 
         if function_name == "screenshot_webpage":
             return base64.b64encode(result.read()).decode("ascii")
         elif function_name == "perform_web_task":
-            # result.data is PerformWebTaskSyncResponseData or PerformWebTaskAsyncResponseData
-            if result.data is None:
-                return ""
-            if hasattr(result.data, "result"):
-                return json.dumps(result.data.result, default=str)
-            return json.dumps(result.data.model_dump(), default=str)
+            return json.dumps(result.data.result, default=str)
         else:
             return result
 
