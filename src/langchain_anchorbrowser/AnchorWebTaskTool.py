@@ -11,7 +11,7 @@ class SimpleAnchorWebTaskTool(AnchorBaseTool, BaseTool):
 
     class SimpleWebTaskInputSchema(BaseModel):
         prompt: str = Field(description="The task prompt to execute")
-        url: str = Field(default="https://example.com", description="Starting URL for the task")
+        url: str | None = Field(default=None, description="Starting URL for the task (default: https://example.com)")
     args_schema: type[BaseModel] = SimpleWebTaskInputSchema
 
 
@@ -22,7 +22,7 @@ class StandardAnchorWebTaskTool(AnchorBaseTool, BaseTool):
 
     class StandardWebTaskInputSchema(BaseModel):
         prompt: str = Field(description="The task prompt to execute")
-        url: str = Field(default="https://example.com", description="Starting URL for the task")
+        url: str | None = Field(default=None, description="Starting URL for the task (default: https://example.com)")
         agent: str = Field(default="browser-use", description="The AI agent to use (browser-use, openai-cua, or gemini-computer-use, default: browser-use)")
         provider: str | None = Field(default=None, description="The AI provider to use (openai, gemini, groq, azure, xai)")
         model: str | None = Field(default=None, description="The specific model to use for task completion")
@@ -37,8 +37,8 @@ class AdvancedAnchorWebTaskTool(AnchorBaseTool, BaseTool):
 
     class AdvancedWebTaskInputSchema(BaseModel):
         prompt: str = Field(description="The task prompt to execute")
-        url: str = Field(default="https://example.com", description="Starting URL for the task")
-        output_schema: dict = Field(default={}, description="Output schema for structured results")
+        url: str | None = Field(default=None, description="Starting URL for the task (default: https://example.com)")
+        output_schema: dict | None = Field(default=None, description="Output schema for structured results")
 
     args_schema: type[BaseModel] = AdvancedWebTaskInputSchema
 

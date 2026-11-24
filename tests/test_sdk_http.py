@@ -17,6 +17,7 @@ from pydantic import SecretStr
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
 
 from langchain_anchorbrowser import (
+    AdvancedAnchorWebTaskTool,
     AnchorContentTool,
     AnchorScreenshotTool,
     AnchorTaskCreateTool,
@@ -160,6 +161,25 @@ class TestWebTask(SDKTestCase):
 
         self.assertEqual(json.loads(result), {"answer": "Example Domain"})
         self.assertSessionClosed()
+
+    def test_task_without_url_starts_from_example_com(self):
+        self.api.route("POST", "/v1/tools/perform-web-task", lambda r: httpx.Response(
+            200, json={"data": {"result": {"answer": "sunny"}}}))
+
+        SimpleAnchorWebTaskTool().invoke({"prompt": "What is the weather in Tokyo?"})
+
+        self.assertEqual(json.loads(self.api.calls("POST", "/v1/tools/perform-web-task")[0].content), {
+            "url": "https://example.com",
+            "prompt": "What is the weather in Tokyo?. Ignore the starting url.",
+        })
+
+    def test_advanced_task_without_output_schema_sends_none(self):
+        self.api.route("POST", "/v1/tools/perform-web-task", lambda r: httpx.Response(
+            200, json={"data": {"result": {"answer": "sunny"}}}))
+
+        AdvancedAnchorWebTaskTool().invoke({"prompt": "Read the heading", "url": "https://example.com"})
+
+        self.assertNotIn("output_schema", json.loads(self.api.calls("POST", "/v1/tools/perform-web-task")[0].content))
 
 
 class TestContent(SDKTestCase):

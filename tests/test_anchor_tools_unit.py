@@ -385,7 +385,7 @@ class TestAnchorWebTaskTools(unittest.TestCase):
         self.assertEqual(valid_input.url, "https://example.com")
 
         valid_input_default = schema(prompt="Search for Python")
-        self.assertEqual(valid_input_default.url, "https://example.com")
+        self.assertIsNone(valid_input_default.url)
 
     def test_standard_web_task_tool(self):
         """Test StandardAnchorWebTaskTool"""
