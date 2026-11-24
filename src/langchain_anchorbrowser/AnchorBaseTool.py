@@ -3,6 +3,7 @@ import getpass
 import json
 import logging
 import os
+import threading
 import time
 from typing import Any, ClassVar
 
@@ -15,24 +16,28 @@ class AnchorClient:
     _instance = None
     _client = None
     _api_key = None
+    # Agents run tool calls in parallel threads; the first calls must not see a half-built client.
+    _lock = threading.Lock()
 
     def __new__(cls):
-        if cls._instance is None:
-            cls._instance = super().__new__(cls)
-        return cls._instance
+        with cls._lock:
+            if cls._instance is None:
+                cls._instance = super().__new__(cls)
+            return cls._instance
 
     def initialize(self):
         """Initialize API key and client only once"""
-        if self._api_key is None:
-            env_api_key = os.getenv('ANCHORBROWSER_API_KEY')
+        with self._lock:
+            if self._api_key is None:
+                env_api_key = os.getenv('ANCHORBROWSER_API_KEY')
 
-            if env_api_key:
-                self._api_key = SecretStr(env_api_key)
-            else:
-                self._api_key = SecretStr(getpass.getpass("Enter API key for Anchor Browser: "))
+                if env_api_key:
+                    self._api_key = SecretStr(env_api_key)
+                else:
+                    self._api_key = SecretStr(getpass.getpass("Enter API key for Anchor Browser: "))
 
-            self._client = Anchorbrowser(api_key=self._api_key.get_secret_value())
-        return self._api_key, self._client
+                self._client = Anchorbrowser(api_key=self._api_key.get_secret_value())
+            return self._api_key, self._client
 
 
 def response_payload(response: Any) -> Any:
