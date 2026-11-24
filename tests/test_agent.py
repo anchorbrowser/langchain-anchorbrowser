@@ -1,7 +1,6 @@
 """Run the Anchor tools inside a LangChain 1.x create_agent graph with a scripted model."""
 
 import json
-import unittest
 
 from langchain.agents import create_agent
 from langchain_core.language_models.fake_chat_models import GenericFakeChatModel
@@ -41,6 +40,3 @@ class TestCreateAgent(AnchorAPITestCase):
         self.assertSessionOpenedAndClosed()
         self.assertEqual(result["messages"][-1].content, "Example Domain; sunny in Tokyo.")
 
-
-if __name__ == '__main__':
-    unittest.main()

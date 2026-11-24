@@ -276,6 +276,3 @@ class TestToolkits(unittest.TestCase):
                          ["create_task", "list_tasks", "delete_task", "run_task", "deploy_task",
                           "list_task_executions"])
 
-
-if __name__ == '__main__':
-    unittest.main()
