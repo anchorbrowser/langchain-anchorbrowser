@@ -101,6 +101,10 @@ See `examples/agent_example.py` for a complete runnable script.
 | `AnchorTaskListExecutionsTool` | List past executions of a task |
 | `AnchorTaskDeleteTool` | Delete a task |
 
+`AnchorContentTool` returns text. Binary downloads such as PDFs are not supported.
+
+The task tools return the API's JSON response body unchanged.
+
 Toolkit helpers that bundle related tools:
 
 - `AnchorWebTaskToolKit` – Simple + Standard + Advanced web task tools
@@ -117,6 +121,7 @@ The tools log to the `langchain_anchorbrowser` logger. Only session ids are logg
 ### 0.3.0
 
 - **Compatibility**: requires `langchain-core >=1.0`, `anchorbrowser >=1.0` and Python 3.10+ (drops the old `<0.4` pin that blocked modern LangChain stacks).
+  - LangChain 1.x passes schema defaults to tools. The web task tools' `url` and `output_schema` now default to unset, so a task without a `url` still starts on example.com with a hint to ignore it, and no empty `output_schema` is sent.
 - **SDK migration**: updated all tools to the anchorbrowser 1.0 SDK.
   - Session creation now uses `sessions.create_session()`.
   - Task tools now use `tasks_legacy.*` (create/list/delete/run/deploy).
@@ -127,7 +132,9 @@ The tools log to the `langchain_anchorbrowser` logger. Only session ids are logg
   - Browser sessions created by the tools are now deleted after each call. Previously they were left open.
   - The tools no longer log the full session object (which includes the CDP URL) or print the live view URL; only the session id is logged.
   - `AnchorTaskListTool` and `AnchorTaskListExecutionsTool` returned `{}`; they now return the API payload (`tasks`, `total`, `page`, `limit` and `results`, `pagination`).
-  - `perform_web_task` returns the task result as JSON; async responses return status and workflow ID.
+  - The web task tools return the task result as a JSON string.
+  - The task tools return the response body as the API sent it, instead of the SDK model with renamed keys and empty fields.
+  - The first tool calls of an agent that runs tools in parallel could fail with `'NoneType' object has no attribute 'sessions'`. The shared client is now created under a lock.
 - **Breaking**: `AnchorContentTool` no longer has a `format` option. The API always returned HTML, so the option had no effect; passing it is still accepted and ignored.
 - **Examples**: `examples/agent_example.py`, the tutorial script and the notebook use LangChain 1.x `create_agent`.
 - **Packaging**: removed the stale `requirements.lock` and `requirements-dev.lock` files and regenerated `poetry.lock`.
