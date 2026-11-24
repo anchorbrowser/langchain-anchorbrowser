@@ -222,6 +222,13 @@ class TestTaskTools(AnchorAPITestCase):
             "taskId": TASK_ID, "version": "1", "inputs": {"ANCHOR_TARGET_URL": "https://example.com"},
         })
 
+    def test_run_task_treats_null_version_as_latest(self):
+        self.api.route_json("POST", "/v1/task/run", {"data": {"success": True}})
+
+        AnchorTaskRunTool().invoke({"task_id": TASK_ID, "version": None, "session_id": None, "inputs": None})
+
+        self.assertEqual(self.api.calls("POST", "/v1/task/run")[0].json(), {"taskId": TASK_ID, "version": "latest"})
+
     def test_task_responses_keep_non_ascii_text(self):
         self.api.route_json("POST", "/v1/task/run", {"data": {"success": True, "output": "café"}})
 

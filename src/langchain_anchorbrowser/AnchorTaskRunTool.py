@@ -33,7 +33,7 @@ class AnchorTaskRunTool(AnchorBaseTool, BaseTool):
 
         call_kwargs = {
             "task_id": task_id,
-            "version": kwargs.get("version", "latest"),
+            "version": kwargs.get("version") or "latest",
         }
 
         if kwargs.get("session_id") is not None:
