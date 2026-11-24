@@ -1,12 +1,13 @@
-from pydantic import SecretStr
-from typing import Any, ClassVar
 import base64
-import logging
-from anchorbrowser import Anchorbrowser
 import getpass
-import time
-import os
 import json
+import logging
+import os
+import time
+from typing import Any, ClassVar
+
+from anchorbrowser import Anchorbrowser
+from pydantic import SecretStr
 
 
 class AnchorClient:

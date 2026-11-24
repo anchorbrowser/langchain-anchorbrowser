@@ -1,7 +1,9 @@
+
+from langchain_core.tools import BaseTool, BaseToolkit
+from pydantic import BaseModel, Field
+
 from .AnchorBaseTool import AnchorBaseTool
-from langchain_core.tools import BaseToolkit, BaseTool
-from pydantic import Field, BaseModel
-from typing import Optional
+
 
 class SimpleAnchorWebTaskTool(AnchorBaseTool, BaseTool):
     name: str = "simple_anchor_web_task_tool"
@@ -23,8 +25,8 @@ class StandardAnchorWebTaskTool(AnchorBaseTool, BaseTool):
         prompt: str = Field(description="The task prompt to execute")
         url: str = Field(default="https://example.com", description="Starting URL for the task")
         agent: str = Field(default="browser-use", description="The AI agent to use (browser-use, openai-cua, or gemini-computer-use, default: browser-use)")
-        provider: Optional[str] = Field(default=None, description="The AI provider to use (openai, gemini, groq, azure, xai)")
-        model: Optional[str] = Field(default=None, description="The specific model to use for task completion")
+        provider: str | None = Field(default=None, description="The AI provider to use (openai, gemini, groq, azure, xai)")
+        model: str | None = Field(default=None, description="The specific model to use for task completion")
     
     args_schema: type[BaseModel] = StandardWebTaskInputSchema
 

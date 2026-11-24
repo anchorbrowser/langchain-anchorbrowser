@@ -1,8 +1,9 @@
-from .AnchorBaseTool import AnchorBaseTool, response_payload
-from langchain_core.tools import BaseTool
-from pydantic import Field, BaseModel
-from typing import Optional
 import json
+
+from langchain_core.tools import BaseTool
+from pydantic import BaseModel, Field
+
+from .AnchorBaseTool import AnchorBaseTool, response_payload
 
 
 class AnchorTaskDeployTool(AnchorBaseTool, BaseTool):
@@ -12,9 +13,9 @@ class AnchorTaskDeployTool(AnchorBaseTool, BaseTool):
 
     class TaskDeployInputSchema(BaseModel):
         task_id: str = Field(description="The ID of the task to deploy - required")
-        code: Optional[str] = Field(default=None, description="Base64 encoded task code (required for new versions)")
-        language: Optional[str] = Field(default="typescript", description="Programming language for the task (default: 'typescript')")
-        description: Optional[str] = Field(default=None, description="Optional description of the version")
+        code: str | None = Field(default=None, description="Base64 encoded task code (required for new versions)")
+        language: str | None = Field(default="typescript", description="Programming language for the task (default: 'typescript')")
+        description: str | None = Field(default=None, description="Optional description of the version")
 
     args_schema: type[BaseModel] = TaskDeployInputSchema
 

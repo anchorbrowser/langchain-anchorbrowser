@@ -1,8 +1,9 @@
-from .AnchorBaseTool import AnchorBaseTool, response_payload
-from langchain_core.tools import BaseTool
-from pydantic import Field, BaseModel
-from typing import Optional
 import json
+
+from langchain_core.tools import BaseTool
+from pydantic import BaseModel, Field
+
+from .AnchorBaseTool import AnchorBaseTool, response_payload
 
 
 class AnchorTaskListExecutionsTool(AnchorBaseTool, BaseTool):
@@ -14,8 +15,8 @@ class AnchorTaskListExecutionsTool(AnchorBaseTool, BaseTool):
         task_id: str = Field(description="The task ID to list executions for - required")
         page: str = Field(default="1", description="Page number (default: 1)")
         limit: str = Field(default="10", description="Number of results per page (default: 10)")
-        status: Optional[str] = Field(default=None, description="Filter by execution status (success, failure, timeout, cancelled). Leave empty for all.")
-        version: Optional[str] = Field(default=None, description="Filter by task version (draft, latest, or version number). Leave empty for all versions.")
+        status: str | None = Field(default=None, description="Filter by execution status (success, failure, timeout, cancelled). Leave empty for all.")
+        version: str | None = Field(default=None, description="Filter by task version (draft, latest, or version number). Leave empty for all versions.")
 
     args_schema: type[BaseModel] = TaskListExecutionsInputSchema
 

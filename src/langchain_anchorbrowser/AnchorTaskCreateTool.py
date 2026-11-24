@@ -1,8 +1,9 @@
-from .AnchorBaseTool import AnchorBaseTool, response_payload
-from langchain_core.tools import BaseTool
-from pydantic import Field, BaseModel
-from typing import Optional
 import json
+
+from langchain_core.tools import BaseTool
+from pydantic import BaseModel, Field
+
+from .AnchorBaseTool import AnchorBaseTool, response_payload
 
 
 class AnchorTaskCreateTool(AnchorBaseTool, BaseTool):
@@ -12,9 +13,9 @@ class AnchorTaskCreateTool(AnchorBaseTool, BaseTool):
 
     class TaskCreateInputSchema(BaseModel):
         name: str = Field(description="Task name (letters, numbers, hyphens, and underscores only) - required")
-        description: Optional[str] = Field(default=None, description="Optional description of the task")
-        code: Optional[str] = Field(default=None, description="Base64 encoded task code (optional)")
-        language: Optional[str] = Field(default="typescript", description="Programming language for the task (default: 'typescript')")
+        description: str | None = Field(default=None, description="Optional description of the task")
+        code: str | None = Field(default=None, description="Base64 encoded task code (optional)")
+        language: str | None = Field(default="typescript", description="Programming language for the task (default: 'typescript')")
 
     args_schema: type[BaseModel] = TaskCreateInputSchema
 

@@ -1,7 +1,9 @@
-from .AnchorBaseTool import AnchorBaseTool
-from langchain_core.tools import BaseTool
-from pydantic import Field, BaseModel
 from typing import ClassVar
+
+from langchain_core.tools import BaseTool
+from pydantic import BaseModel, Field
+
+from .AnchorBaseTool import AnchorBaseTool
 
 
 class AnchorContentTool(AnchorBaseTool, BaseTool):

@@ -1,8 +1,9 @@
-from .AnchorBaseTool import AnchorBaseTool, response_payload
-from langchain_core.tools import BaseTool
-from pydantic import Field, BaseModel
-from typing import Optional
 import json
+
+from langchain_core.tools import BaseTool
+from pydantic import BaseModel, Field
+
+from .AnchorBaseTool import AnchorBaseTool, response_payload
 
 
 class AnchorTaskRunTool(AnchorBaseTool, BaseTool):
@@ -12,9 +13,9 @@ class AnchorTaskRunTool(AnchorBaseTool, BaseTool):
 
     class TaskRunInputSchema(BaseModel):
         task_id: str = Field(description="Task identifier - required")
-        version: Optional[str] = Field(default="latest", description="Version to run (draft, latest, or version number, default: 'latest')")
-        session_id: Optional[str] = Field(default=None, description="Optional existing session ID to use")
-        inputs: Optional[str] = Field(default=None, description="Environment variables for task execution as JSON string (keys must start with ANCHOR_)")
+        version: str | None = Field(default="latest", description="Version to run (draft, latest, or version number, default: 'latest')")
+        session_id: str | None = Field(default=None, description="Optional existing session ID to use")
+        inputs: str | None = Field(default=None, description="Environment variables for task execution as JSON string (keys must start with ANCHOR_)")
 
     args_schema: type[BaseModel] = TaskRunInputSchema
 
@@ -28,7 +29,7 @@ class AnchorTaskRunTool(AnchorBaseTool, BaseTool):
             try:
                 inputs = json.loads(kwargs["inputs"]) if isinstance(kwargs["inputs"], str) else kwargs["inputs"]
             except json.JSONDecodeError as e:
-                raise ValueError(f"Invalid JSON in inputs: {e}")
+                raise ValueError(f"Invalid JSON in inputs: {e}") from e
 
         call_kwargs = {
             "task_id": task_id,
