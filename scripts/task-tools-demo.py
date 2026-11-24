@@ -6,6 +6,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "s
 
 from langchain_anchorbrowser import (
     AnchorTaskCreateTool,
+    AnchorTaskDeleteTool,  # noqa: F401 (used by the optional cleanup block at the end)
     AnchorTaskDeployTool,
     AnchorTaskListExecutionsTool,
     AnchorTaskListTool,
