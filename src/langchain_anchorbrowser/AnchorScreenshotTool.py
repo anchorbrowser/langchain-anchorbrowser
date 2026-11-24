@@ -1,4 +1,3 @@
-
 from langchain_core.tools import BaseTool
 from pydantic import BaseModel, Field
 
@@ -21,5 +20,5 @@ class AnchorScreenshotTool(AnchorBaseTool, BaseTool):
         scroll_all_content: bool | None = Field(default=None, description="Whether to scroll all content")
         capture_full_height: bool | None = Field(default=None, description="Whether to capture full height")
         s3_target_address: str | None = Field(default=None, description="S3 target address for saving")
-    
+
     args_schema: type[BaseModel] = InputSchema
