@@ -40,13 +40,14 @@ class AnchorClient:
             return self._api_key, self._client
 
 
-def response_payload(response: Any) -> Any:
-    """Return the JSON body of an anchorbrowser SDK response as the API sent it.
+def response_json(response: Any) -> str:
+    """Return the body of an anchorbrowser SDK response, as the API sent it, as a JSON string.
 
     The SDK builds models without validation, so typed fields (UUIDs, datetimes)
     still hold raw strings; serializer warnings about that are suppressed.
     """
-    return response.model_dump(by_alias=True, exclude_unset=True, warnings=False)
+    body = response.model_dump(by_alias=True, exclude_unset=True, warnings=False)
+    return json.dumps(body, indent=2, ensure_ascii=False, default=str)
 
 
 class AnchorBaseTool:
@@ -105,7 +106,7 @@ class AnchorBaseTool:
         if function_name == "screenshot_webpage":
             return base64.b64encode(result.read()).decode("ascii")
         elif function_name == "perform_web_task":
-            return json.dumps(result.data.result, default=str)
+            return json.dumps(result.data.result, ensure_ascii=False, default=str)
         else:
             return result
 

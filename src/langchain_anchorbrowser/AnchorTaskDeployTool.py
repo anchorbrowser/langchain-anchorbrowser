@@ -1,9 +1,7 @@
-import json
-
 from langchain_core.tools import BaseTool
 from pydantic import BaseModel, Field
 
-from .AnchorBaseTool import AnchorBaseTool, response_payload
+from .AnchorBaseTool import AnchorBaseTool, response_json
 
 
 class AnchorTaskDeployTool(AnchorBaseTool, BaseTool):
@@ -30,5 +28,4 @@ class AnchorTaskDeployTool(AnchorBaseTool, BaseTool):
 
         result = self.client.tasks_legacy.deploy_task(**deploy_kwargs)
 
-        data = response_payload(result)
-        return json.dumps(data, indent=2, default=str)
+        return response_json(result)

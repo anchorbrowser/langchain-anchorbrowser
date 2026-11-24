@@ -1,9 +1,7 @@
-import json
-
 from langchain_core.tools import BaseTool
 from pydantic import BaseModel, Field
 
-from .AnchorBaseTool import AnchorBaseTool, response_payload
+from .AnchorBaseTool import AnchorBaseTool, response_json
 
 
 class AnchorTaskListTool(AnchorBaseTool, BaseTool):
@@ -23,5 +21,4 @@ class AnchorTaskListTool(AnchorBaseTool, BaseTool):
             limit=kwargs.get("limit", "10"),
         )
 
-        data = response_payload(result)
-        return json.dumps(data, indent=2, default=str)
+        return response_json(result)

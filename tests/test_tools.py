@@ -111,6 +111,13 @@ class TestWebTaskTools(AnchorAPITestCase):
         self.assertEqual(self.sent_body(), {"prompt": "Read the heading", "url": "https://example.com"})
         self.assertSessionOpenedAndClosed()
 
+    def test_result_keeps_non_ascii_text(self):
+        self.api.route_json("POST", "/v1/tools/perform-web-task", {"data": {"result": {"answer": "東京は晴れ, 21°C"}}})
+
+        result = SimpleAnchorWebTaskTool().invoke({"prompt": "Weather in Tokyo?", "url": "https://example.com"})
+
+        self.assertEqual(result, '{"answer": "東京は晴れ, 21°C"}')
+
     def test_task_without_url_starts_from_example_com(self):
         SimpleAnchorWebTaskTool().invoke({"prompt": "What is the weather in Tokyo?"})
 
@@ -202,6 +209,13 @@ class TestTaskTools(AnchorAPITestCase):
         self.assertEqual(self.api.calls("POST", "/v1/task/run")[0].json(), {
             "taskId": TASK_ID, "version": "1", "inputs": {"ANCHOR_TARGET_URL": "https://example.com"},
         })
+
+    def test_task_responses_keep_non_ascii_text(self):
+        self.api.route_json("POST", "/v1/task/run", {"data": {"success": True, "output": "café"}})
+
+        result = AnchorTaskRunTool().invoke({"task_id": TASK_ID})
+
+        self.assertIn('"output": "café"', result)
 
     def test_run_task_rejects_invalid_inputs_without_calling_the_api(self):
         with self.assertRaises(ValueError):

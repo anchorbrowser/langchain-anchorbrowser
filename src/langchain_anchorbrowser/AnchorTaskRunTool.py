@@ -3,7 +3,7 @@ import json
 from langchain_core.tools import BaseTool
 from pydantic import BaseModel, Field
 
-from .AnchorBaseTool import AnchorBaseTool, response_payload
+from .AnchorBaseTool import AnchorBaseTool, response_json
 
 
 class AnchorTaskRunTool(AnchorBaseTool, BaseTool):
@@ -44,5 +44,4 @@ class AnchorTaskRunTool(AnchorBaseTool, BaseTool):
 
         result = self.client.tasks_legacy.run_adhoc_task(**call_kwargs)
 
-        data = response_payload(result)
-        return json.dumps(data, indent=2, default=str)
+        return response_json(result)
