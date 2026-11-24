@@ -21,11 +21,10 @@ class AnchorTaskCreateTool(AnchorBaseTool, BaseTool):
         if not kwargs.get("name"):
             raise ValueError("Task name is required")
 
-        result = self.client.tasks_legacy.create_task(
-            name=kwargs["name"],
-            language=kwargs.get("language", "typescript"),
-            description=kwargs.get("description"),
-            code=kwargs.get("code"),
-        )
+        create_kwargs = {"name": kwargs["name"], "language": kwargs.get("language") or "typescript"}
+        if kwargs.get("description"):
+            create_kwargs["description"] = kwargs["description"]
+        if kwargs.get("code"):
+            create_kwargs["code"] = kwargs["code"]
 
-        return response_json(result)
+        return response_json(self.client.tasks_legacy.create_task(**create_kwargs))

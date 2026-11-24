@@ -203,6 +203,13 @@ class TestTaskTools(AnchorAPITestCase):
         self.assertEqual(self.api.calls("POST", "/v1/task")[0].json(),
                          {"name": "demo", "description": "A demo", "code": "ZXhwb3J0IHt9", "language": "typescript"})
 
+    def test_create_task_sends_only_the_fields_given(self):
+        self.api.route_json("POST", "/v1/task", {"data": {"id": TASK_ID, "name": "demo"}})
+
+        AnchorTaskCreateTool().invoke({"name": "demo"})
+
+        self.assertEqual(self.api.calls("POST", "/v1/task")[0].json(), {"name": "demo", "language": "typescript"})
+
     def test_run_task_sends_parsed_inputs(self):
         run = {"success": True, "taskId": TASK_ID, "async": False, "executionTime": 1234, "output": "done"}
         self.api.route_json("POST", "/v1/task/run", {"data": run})
