@@ -1,4 +1,4 @@
-from .AnchorBaseTool import AnchorBaseTool
+from .AnchorBaseTool import AnchorBaseTool, response_payload
 from langchain_core.tools import BaseTool
 from pydantic import Field, BaseModel
 import json
@@ -21,5 +21,5 @@ class AnchorTaskDeleteTool(AnchorBaseTool, BaseTool):
 
         result = self.client.tasks_legacy.delete_task(task_id)
 
-        data = result.data.model_dump() if result.data else {"success": True, "task_id": task_id}
+        data = response_payload(result) or {"success": True, "task_id": task_id}
         return json.dumps(data, indent=2, default=str)

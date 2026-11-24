@@ -1,4 +1,4 @@
-from .AnchorBaseTool import AnchorBaseTool
+from .AnchorBaseTool import AnchorBaseTool, response_payload
 from langchain_core.tools import BaseTool
 from pydantic import Field, BaseModel
 from typing import Optional
@@ -33,5 +33,5 @@ class AnchorTaskDeployTool(AnchorBaseTool, BaseTool):
 
         result = self.client.tasks_legacy.deploy_task(**deploy_kwargs)
 
-        data = result.data.model_dump() if result.data else {}
+        data = response_payload(result)
         return json.dumps(data, indent=2, default=str)

@@ -1,4 +1,4 @@
-from .AnchorBaseTool import AnchorBaseTool
+from .AnchorBaseTool import AnchorBaseTool, response_payload
 from langchain_core.tools import BaseTool
 from pydantic import Field, BaseModel
 from typing import Optional
@@ -29,5 +29,5 @@ class AnchorTaskCreateTool(AnchorBaseTool, BaseTool):
             code=kwargs.get("code"),
         )
 
-        data = result.data.model_dump() if result.data else {}
+        data = response_payload(result)
         return json.dumps(data, indent=2, default=str)
