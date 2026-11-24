@@ -1,19 +1,24 @@
+import importlib
+import json
+import os
+import sys
 import unittest
 from unittest.mock import Mock, patch
-import sys
-import os
-import json
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
 
+from langchain_anchorbrowser.AnchorBaseTool import AnchorClient
 from langchain_anchorbrowser.AnchorTaskCreateTool import AnchorTaskCreateTool
-from langchain_anchorbrowser.AnchorTaskListTool import AnchorTaskListTool
 from langchain_anchorbrowser.AnchorTaskDeleteTool import AnchorTaskDeleteTool
-from langchain_anchorbrowser.AnchorTaskRunTool import AnchorTaskRunTool
 from langchain_anchorbrowser.AnchorTaskDeployTool import AnchorTaskDeployTool
 from langchain_anchorbrowser.AnchorTaskListExecutionsTool import AnchorTaskListExecutionsTool
+from langchain_anchorbrowser.AnchorTaskListTool import AnchorTaskListTool
+from langchain_anchorbrowser.AnchorTaskRunTool import AnchorTaskRunTool
 from langchain_anchorbrowser.AnchorTaskToolKit import AnchorTaskToolKit
-from langchain_anchorbrowser.AnchorBaseTool import AnchorBaseTool, AnchorClient
+
+# The package re-exports a class named like this module, so on Python 3.10 a dotted
+# patch target such as "langchain_anchorbrowser.AnchorBaseTool.X" resolves to the class.
+base_tool_module = importlib.import_module("langchain_anchorbrowser.AnchorBaseTool")
 
 
 def _make_mock_client(mock_anchorbrowser):
@@ -30,8 +35,8 @@ class TestAnchorTaskCreateTool(unittest.TestCase):
         AnchorClient._client = None
         AnchorClient._api_key = None
 
-    @patch('langchain_anchorbrowser.AnchorBaseTool.getpass.getpass')
-    @patch('langchain_anchorbrowser.AnchorBaseTool.Anchorbrowser')
+    @patch('getpass.getpass')
+    @patch.object(base_tool_module, 'Anchorbrowser')
     @patch.dict(os.environ, {}, clear=True)
     def test_tool_attributes(self, mock_anchorbrowser, mock_getpass):
         mock_getpass.return_value = "test_api_key"
@@ -43,8 +48,8 @@ class TestAnchorTaskCreateTool(unittest.TestCase):
         self.assertIn("Create a new task", tool.description)
         self.assertIsNone(tool.client_function_name)
 
-    @patch('langchain_anchorbrowser.AnchorBaseTool.getpass.getpass')
-    @patch('langchain_anchorbrowser.AnchorBaseTool.Anchorbrowser')
+    @patch('getpass.getpass')
+    @patch.object(base_tool_module, 'Anchorbrowser')
     @patch.dict(os.environ, {}, clear=True)
     def test_input_schema_validation(self, mock_anchorbrowser, mock_getpass):
         mock_getpass.return_value = "test_api_key"
@@ -64,8 +69,8 @@ class TestAnchorTaskCreateTool(unittest.TestCase):
         self.assertEqual(full_input.description, "A test task")
         self.assertEqual(full_input.code, "base64code")
 
-    @patch('langchain_anchorbrowser.AnchorBaseTool.getpass.getpass')
-    @patch('langchain_anchorbrowser.AnchorBaseTool.Anchorbrowser')
+    @patch('getpass.getpass')
+    @patch.object(base_tool_module, 'Anchorbrowser')
     @patch.dict(os.environ, {}, clear=True)
     def test_create_task_execution(self, mock_anchorbrowser, mock_getpass):
         """Test that create_task calls tasks_legacy.create_task"""
@@ -92,8 +97,8 @@ class TestAnchorTaskCreateTool(unittest.TestCase):
             code=None,
         )
 
-    @patch('langchain_anchorbrowser.AnchorBaseTool.getpass.getpass')
-    @patch('langchain_anchorbrowser.AnchorBaseTool.Anchorbrowser')
+    @patch('getpass.getpass')
+    @patch.object(base_tool_module, 'Anchorbrowser')
     @patch.dict(os.environ, {}, clear=True)
     def test_create_task_missing_name(self, mock_anchorbrowser, mock_getpass):
         mock_getpass.return_value = "test_api_key"
@@ -114,8 +119,8 @@ class TestAnchorTaskListTool(unittest.TestCase):
         AnchorClient._client = None
         AnchorClient._api_key = None
 
-    @patch('langchain_anchorbrowser.AnchorBaseTool.getpass.getpass')
-    @patch('langchain_anchorbrowser.AnchorBaseTool.Anchorbrowser')
+    @patch('getpass.getpass')
+    @patch.object(base_tool_module, 'Anchorbrowser')
     @patch.dict(os.environ, {}, clear=True)
     def test_tool_attributes(self, mock_anchorbrowser, mock_getpass):
         mock_getpass.return_value = "test_api_key"
@@ -127,8 +132,8 @@ class TestAnchorTaskListTool(unittest.TestCase):
         self.assertIn("List all tasks", tool.description)
         self.assertIsNone(tool.client_function_name)
 
-    @patch('langchain_anchorbrowser.AnchorBaseTool.getpass.getpass')
-    @patch('langchain_anchorbrowser.AnchorBaseTool.Anchorbrowser')
+    @patch('getpass.getpass')
+    @patch.object(base_tool_module, 'Anchorbrowser')
     @patch.dict(os.environ, {}, clear=True)
     def test_input_schema_validation(self, mock_anchorbrowser, mock_getpass):
         mock_getpass.return_value = "test_api_key"
@@ -145,8 +150,8 @@ class TestAnchorTaskListTool(unittest.TestCase):
         self.assertEqual(custom_input.page, "2")
         self.assertEqual(custom_input.limit, "20")
 
-    @patch('langchain_anchorbrowser.AnchorBaseTool.getpass.getpass')
-    @patch('langchain_anchorbrowser.AnchorBaseTool.Anchorbrowser')
+    @patch('getpass.getpass')
+    @patch.object(base_tool_module, 'Anchorbrowser')
     @patch.dict(os.environ, {}, clear=True)
     def test_list_tasks_execution(self, mock_anchorbrowser, mock_getpass):
         mock_getpass.return_value = "test_api_key"
@@ -167,8 +172,8 @@ class TestAnchorTaskListTool(unittest.TestCase):
 
         mock_client.tasks_legacy.list_tasks.assert_called_once_with(page="1", limit="10")
 
-    @patch('langchain_anchorbrowser.AnchorBaseTool.getpass.getpass')
-    @patch('langchain_anchorbrowser.AnchorBaseTool.Anchorbrowser')
+    @patch('getpass.getpass')
+    @patch.object(base_tool_module, 'Anchorbrowser')
     @patch.dict(os.environ, {}, clear=True)
     def test_list_tasks_with_defaults(self, mock_anchorbrowser, mock_getpass):
         mock_getpass.return_value = "test_api_key"
@@ -193,8 +198,8 @@ class TestAnchorTaskDeleteTool(unittest.TestCase):
         AnchorClient._client = None
         AnchorClient._api_key = None
 
-    @patch('langchain_anchorbrowser.AnchorBaseTool.getpass.getpass')
-    @patch('langchain_anchorbrowser.AnchorBaseTool.Anchorbrowser')
+    @patch('getpass.getpass')
+    @patch.object(base_tool_module, 'Anchorbrowser')
     @patch.dict(os.environ, {}, clear=True)
     def test_tool_attributes(self, mock_anchorbrowser, mock_getpass):
         mock_getpass.return_value = "test_api_key"
@@ -206,8 +211,8 @@ class TestAnchorTaskDeleteTool(unittest.TestCase):
         self.assertIn("Delete a task", tool.description)
         self.assertIsNone(tool.client_function_name)
 
-    @patch('langchain_anchorbrowser.AnchorBaseTool.getpass.getpass')
-    @patch('langchain_anchorbrowser.AnchorBaseTool.Anchorbrowser')
+    @patch('getpass.getpass')
+    @patch.object(base_tool_module, 'Anchorbrowser')
     @patch.dict(os.environ, {}, clear=True)
     def test_input_schema_validation(self, mock_anchorbrowser, mock_getpass):
         mock_getpass.return_value = "test_api_key"
@@ -219,8 +224,8 @@ class TestAnchorTaskDeleteTool(unittest.TestCase):
         valid_input = schema(task_id="task-123")
         self.assertEqual(valid_input.task_id, "task-123")
 
-    @patch('langchain_anchorbrowser.AnchorBaseTool.getpass.getpass')
-    @patch('langchain_anchorbrowser.AnchorBaseTool.Anchorbrowser')
+    @patch('getpass.getpass')
+    @patch.object(base_tool_module, 'Anchorbrowser')
     @patch.dict(os.environ, {}, clear=True)
     def test_delete_task_execution(self, mock_anchorbrowser, mock_getpass):
         """Test that delete_task calls tasks_legacy.delete_task (SDK, not httpx)"""
@@ -241,8 +246,8 @@ class TestAnchorTaskDeleteTool(unittest.TestCase):
 
         mock_client.tasks_legacy.delete_task.assert_called_once_with("task-123")
 
-    @patch('langchain_anchorbrowser.AnchorBaseTool.getpass.getpass')
-    @patch('langchain_anchorbrowser.AnchorBaseTool.Anchorbrowser')
+    @patch('getpass.getpass')
+    @patch.object(base_tool_module, 'Anchorbrowser')
     @patch.dict(os.environ, {}, clear=True)
     def test_delete_task_missing_task_id(self, mock_anchorbrowser, mock_getpass):
         mock_getpass.return_value = "test_api_key"
@@ -263,8 +268,8 @@ class TestAnchorTaskRunTool(unittest.TestCase):
         AnchorClient._client = None
         AnchorClient._api_key = None
 
-    @patch('langchain_anchorbrowser.AnchorBaseTool.getpass.getpass')
-    @patch('langchain_anchorbrowser.AnchorBaseTool.Anchorbrowser')
+    @patch('getpass.getpass')
+    @patch.object(base_tool_module, 'Anchorbrowser')
     @patch.dict(os.environ, {}, clear=True)
     def test_tool_attributes(self, mock_anchorbrowser, mock_getpass):
         mock_getpass.return_value = "test_api_key"
@@ -276,8 +281,8 @@ class TestAnchorTaskRunTool(unittest.TestCase):
         self.assertIn("Execute a task", tool.description)
         self.assertIsNone(tool.client_function_name)
 
-    @patch('langchain_anchorbrowser.AnchorBaseTool.getpass.getpass')
-    @patch('langchain_anchorbrowser.AnchorBaseTool.Anchorbrowser')
+    @patch('getpass.getpass')
+    @patch.object(base_tool_module, 'Anchorbrowser')
     @patch.dict(os.environ, {}, clear=True)
     def test_input_schema_validation(self, mock_anchorbrowser, mock_getpass):
         mock_getpass.return_value = "test_api_key"
@@ -301,8 +306,8 @@ class TestAnchorTaskRunTool(unittest.TestCase):
         self.assertEqual(full_input.version, "1")
         self.assertEqual(full_input.session_id, "session-456")
 
-    @patch('langchain_anchorbrowser.AnchorBaseTool.getpass.getpass')
-    @patch('langchain_anchorbrowser.AnchorBaseTool.Anchorbrowser')
+    @patch('getpass.getpass')
+    @patch.object(base_tool_module, 'Anchorbrowser')
     @patch.dict(os.environ, {}, clear=True)
     def test_run_task_execution(self, mock_anchorbrowser, mock_getpass):
         """Test that run_task calls tasks_legacy.run_adhoc_task"""
@@ -326,8 +331,8 @@ class TestAnchorTaskRunTool(unittest.TestCase):
             version="1"
         )
 
-    @patch('langchain_anchorbrowser.AnchorBaseTool.getpass.getpass')
-    @patch('langchain_anchorbrowser.AnchorBaseTool.Anchorbrowser')
+    @patch('getpass.getpass')
+    @patch.object(base_tool_module, 'Anchorbrowser')
     @patch.dict(os.environ, {}, clear=True)
     def test_run_task_with_inputs(self, mock_anchorbrowser, mock_getpass):
         mock_getpass.return_value = "test_api_key"
@@ -349,8 +354,8 @@ class TestAnchorTaskRunTool(unittest.TestCase):
             inputs={"ANCHOR_TARGET_URL": "https://example.com", "ANCHOR_MAX_PAGES": "10"}
         )
 
-    @patch('langchain_anchorbrowser.AnchorBaseTool.getpass.getpass')
-    @patch('langchain_anchorbrowser.AnchorBaseTool.Anchorbrowser')
+    @patch('getpass.getpass')
+    @patch.object(base_tool_module, 'Anchorbrowser')
     @patch.dict(os.environ, {}, clear=True)
     def test_run_task_invalid_json_inputs(self, mock_anchorbrowser, mock_getpass):
         mock_getpass.return_value = "test_api_key"
@@ -363,8 +368,8 @@ class TestAnchorTaskRunTool(unittest.TestCase):
 
         self.assertIn("Invalid JSON in inputs", str(context.exception))
 
-    @patch('langchain_anchorbrowser.AnchorBaseTool.getpass.getpass')
-    @patch('langchain_anchorbrowser.AnchorBaseTool.Anchorbrowser')
+    @patch('getpass.getpass')
+    @patch.object(base_tool_module, 'Anchorbrowser')
     @patch.dict(os.environ, {}, clear=True)
     def test_run_task_missing_task_id(self, mock_anchorbrowser, mock_getpass):
         mock_getpass.return_value = "test_api_key"
@@ -385,8 +390,8 @@ class TestAnchorTaskDeployTool(unittest.TestCase):
         AnchorClient._client = None
         AnchorClient._api_key = None
 
-    @patch('langchain_anchorbrowser.AnchorBaseTool.getpass.getpass')
-    @patch('langchain_anchorbrowser.AnchorBaseTool.Anchorbrowser')
+    @patch('getpass.getpass')
+    @patch.object(base_tool_module, 'Anchorbrowser')
     @patch.dict(os.environ, {}, clear=True)
     def test_tool_attributes(self, mock_anchorbrowser, mock_getpass):
         mock_getpass.return_value = "test_api_key"
@@ -398,8 +403,8 @@ class TestAnchorTaskDeployTool(unittest.TestCase):
         self.assertIn("Deploy a task version", tool.description)
         self.assertIsNone(tool.client_function_name)
 
-    @patch('langchain_anchorbrowser.AnchorBaseTool.getpass.getpass')
-    @patch('langchain_anchorbrowser.AnchorBaseTool.Anchorbrowser')
+    @patch('getpass.getpass')
+    @patch.object(base_tool_module, 'Anchorbrowser')
     @patch.dict(os.environ, {}, clear=True)
     def test_input_schema_validation(self, mock_anchorbrowser, mock_getpass):
         mock_getpass.return_value = "test_api_key"
@@ -418,8 +423,8 @@ class TestAnchorTaskDeployTool(unittest.TestCase):
         self.assertEqual(full_input.code, "base64code")
         self.assertEqual(full_input.description, "v1.0")
 
-    @patch('langchain_anchorbrowser.AnchorBaseTool.getpass.getpass')
-    @patch('langchain_anchorbrowser.AnchorBaseTool.Anchorbrowser')
+    @patch('getpass.getpass')
+    @patch.object(base_tool_module, 'Anchorbrowser')
     @patch.dict(os.environ, {}, clear=True)
     def test_deploy_task_execution(self, mock_anchorbrowser, mock_getpass):
         """Test that deploy_task calls tasks_legacy.deploy_task (SDK, not httpx)"""
@@ -444,8 +449,8 @@ class TestAnchorTaskDeployTool(unittest.TestCase):
             language="typescript",
         )
 
-    @patch('langchain_anchorbrowser.AnchorBaseTool.getpass.getpass')
-    @patch('langchain_anchorbrowser.AnchorBaseTool.Anchorbrowser')
+    @patch('getpass.getpass')
+    @patch.object(base_tool_module, 'Anchorbrowser')
     @patch.dict(os.environ, {}, clear=True)
     def test_deploy_task_missing_task_id(self, mock_anchorbrowser, mock_getpass):
         mock_getpass.return_value = "test_api_key"
@@ -466,8 +471,8 @@ class TestAnchorTaskListExecutionsTool(unittest.TestCase):
         AnchorClient._client = None
         AnchorClient._api_key = None
 
-    @patch('langchain_anchorbrowser.AnchorBaseTool.getpass.getpass')
-    @patch('langchain_anchorbrowser.AnchorBaseTool.Anchorbrowser')
+    @patch('getpass.getpass')
+    @patch.object(base_tool_module, 'Anchorbrowser')
     @patch.dict(os.environ, {}, clear=True)
     def test_tool_attributes(self, mock_anchorbrowser, mock_getpass):
         mock_getpass.return_value = "test_api_key"
@@ -479,8 +484,8 @@ class TestAnchorTaskListExecutionsTool(unittest.TestCase):
         self.assertIn("List task execution results", tool.description)
         self.assertIsNone(tool.client_function_name)
 
-    @patch('langchain_anchorbrowser.AnchorBaseTool.getpass.getpass')
-    @patch('langchain_anchorbrowser.AnchorBaseTool.Anchorbrowser')
+    @patch('getpass.getpass')
+    @patch.object(base_tool_module, 'Anchorbrowser')
     @patch.dict(os.environ, {}, clear=True)
     def test_input_schema_validation(self, mock_anchorbrowser, mock_getpass):
         mock_getpass.return_value = "test_api_key"
@@ -501,8 +506,8 @@ class TestAnchorTaskListExecutionsTool(unittest.TestCase):
         self.assertEqual(full_input.status, "success")
         self.assertEqual(full_input.version, "1.0")
 
-    @patch('langchain_anchorbrowser.AnchorBaseTool.getpass.getpass')
-    @patch('langchain_anchorbrowser.AnchorBaseTool.Anchorbrowser')
+    @patch('getpass.getpass')
+    @patch.object(base_tool_module, 'Anchorbrowser')
     @patch.dict(os.environ, {}, clear=True)
     def test_list_executions_execution(self, mock_anchorbrowser, mock_getpass):
         """Test that list_task_executions calls tasks_legacy.list_task_executions (SDK, not httpx)"""
@@ -529,8 +534,8 @@ class TestAnchorTaskListExecutionsTool(unittest.TestCase):
             task_id="task-123", page="1", limit="10"
         )
 
-    @patch('langchain_anchorbrowser.AnchorBaseTool.getpass.getpass')
-    @patch('langchain_anchorbrowser.AnchorBaseTool.Anchorbrowser')
+    @patch('getpass.getpass')
+    @patch.object(base_tool_module, 'Anchorbrowser')
     @patch.dict(os.environ, {}, clear=True)
     def test_list_executions_with_filters(self, mock_anchorbrowser, mock_getpass):
         mock_getpass.return_value = "test_api_key"
@@ -549,8 +554,8 @@ class TestAnchorTaskListExecutionsTool(unittest.TestCase):
         self.assertEqual(call_kwargs["status"], "success")
         self.assertEqual(call_kwargs["version"], "1")
 
-    @patch('langchain_anchorbrowser.AnchorBaseTool.getpass.getpass')
-    @patch('langchain_anchorbrowser.AnchorBaseTool.Anchorbrowser')
+    @patch('getpass.getpass')
+    @patch.object(base_tool_module, 'Anchorbrowser')
     @patch.dict(os.environ, {}, clear=True)
     def test_list_executions_filters_empty_strings(self, mock_anchorbrowser, mock_getpass):
         """Empty strings for status/version should not be passed to the API"""
@@ -570,8 +575,8 @@ class TestAnchorTaskListExecutionsTool(unittest.TestCase):
         self.assertNotIn("status", call_kwargs)
         self.assertNotIn("version", call_kwargs)
 
-    @patch('langchain_anchorbrowser.AnchorBaseTool.getpass.getpass')
-    @patch('langchain_anchorbrowser.AnchorBaseTool.Anchorbrowser')
+    @patch('getpass.getpass')
+    @patch.object(base_tool_module, 'Anchorbrowser')
     @patch.dict(os.environ, {}, clear=True)
     def test_list_executions_missing_task_id(self, mock_anchorbrowser, mock_getpass):
         mock_getpass.return_value = "test_api_key"
@@ -593,8 +598,8 @@ class TestAnchorTaskToolKit(unittest.TestCase):
         self.assertEqual(toolkit.name, "anchor_task_tool_kit")
         self.assertIn("Tools for managing and executing", toolkit.description)
 
-    @patch('langchain_anchorbrowser.AnchorBaseTool.getpass.getpass')
-    @patch('langchain_anchorbrowser.AnchorBaseTool.Anchorbrowser')
+    @patch('getpass.getpass')
+    @patch.object(base_tool_module, 'Anchorbrowser')
     @patch.dict(os.environ, {}, clear=True)
     def test_get_tools(self, mock_anchorbrowser, mock_getpass):
         mock_getpass.return_value = "test_api_key"

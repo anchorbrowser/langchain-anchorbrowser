@@ -1,20 +1,25 @@
 import base64
+import importlib
+import os
+import sys
 import unittest
 from unittest.mock import Mock, patch
-import sys
-import os
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
 
+from langchain_anchorbrowser.AnchorBaseTool import AnchorBaseTool, AnchorClient
 from langchain_anchorbrowser.AnchorContentTool import AnchorContentTool
 from langchain_anchorbrowser.AnchorScreenshotTool import AnchorScreenshotTool
 from langchain_anchorbrowser.AnchorWebTaskTool import (
+    AdvancedAnchorWebTaskTool,
+    AnchorWebTaskToolKit,
     SimpleAnchorWebTaskTool,
     StandardAnchorWebTaskTool,
-    AdvancedAnchorWebTaskTool,
-    AnchorWebTaskToolKit
 )
-from langchain_anchorbrowser.AnchorBaseTool import AnchorBaseTool, AnchorClient
+
+# The package re-exports a class named like this module, so on Python 3.10 a dotted
+# patch target such as "langchain_anchorbrowser.AnchorBaseTool.X" resolves to the class.
+base_tool_module = importlib.import_module("langchain_anchorbrowser.AnchorBaseTool")
 
 
 class TestAnchorClient(unittest.TestCase):
@@ -25,7 +30,7 @@ class TestAnchorClient(unittest.TestCase):
         AnchorClient._client = None
         AnchorClient._api_key = None
 
-    @patch('langchain_anchorbrowser.AnchorBaseTool.Anchorbrowser')
+    @patch.object(base_tool_module, 'Anchorbrowser')
     @patch.dict(os.environ, {'ANCHORBROWSER_API_KEY': 'env_api_key'})
     def test_environment_api_key_priority(self, mock_anchorbrowser):
         """Test that environment API key takes priority"""
@@ -46,8 +51,8 @@ class TestAnchorBaseTool(unittest.TestCase):
         AnchorClient._client = None
         AnchorClient._api_key = None
 
-    @patch('langchain_anchorbrowser.AnchorBaseTool.getpass.getpass')
-    @patch('langchain_anchorbrowser.AnchorBaseTool.Anchorbrowser')
+    @patch('getpass.getpass')
+    @patch.object(base_tool_module, 'Anchorbrowser')
     @patch.dict(os.environ, {}, clear=True)
     def test_base_tool_initialization(self, mock_anchorbrowser, mock_getpass):
         """Test base tool initialization"""
@@ -64,8 +69,8 @@ class TestAnchorBaseTool(unittest.TestCase):
         self.assertIsNotNone(tool.client)
         self.assertEqual(tool.client_function_name, "test_function")
 
-    @patch('langchain_anchorbrowser.AnchorBaseTool.getpass.getpass')
-    @patch('langchain_anchorbrowser.AnchorBaseTool.Anchorbrowser')
+    @patch('getpass.getpass')
+    @patch.object(base_tool_module, 'Anchorbrowser')
     @patch.dict(os.environ, {}, clear=True)
     def test_run_method_with_valid_function(self, mock_anchorbrowser, mock_getpass):
         """Test the _run method with a valid client function"""
@@ -94,8 +99,8 @@ class TestAnchorBaseTool(unittest.TestCase):
         self.assertEqual(result, "test_result")
         mock_function.assert_called_once_with(url="https://example.com", param="value", session_id="test_session_id")
 
-    @patch('langchain_anchorbrowser.AnchorBaseTool.getpass.getpass')
-    @patch('langchain_anchorbrowser.AnchorBaseTool.Anchorbrowser')
+    @patch('getpass.getpass')
+    @patch.object(base_tool_module, 'Anchorbrowser')
     @patch.dict(os.environ, {}, clear=True)
     def test_run_method_missing_function_name(self, mock_anchorbrowser, mock_getpass):
         """Test _run method raises error when client_function_name is not set"""
@@ -112,8 +117,8 @@ class TestAnchorBaseTool(unittest.TestCase):
 
         self.assertIn("client_function_name not set", str(context.exception))
 
-    @patch('langchain_anchorbrowser.AnchorBaseTool.getpass.getpass')
-    @patch('langchain_anchorbrowser.AnchorBaseTool.Anchorbrowser')
+    @patch('getpass.getpass')
+    @patch.object(base_tool_module, 'Anchorbrowser')
     @patch.dict(os.environ, {}, clear=True)
     def test_run_method_filters_none_values(self, mock_anchorbrowser, mock_getpass):
         """Test that _run method filters out None values"""
@@ -141,8 +146,8 @@ class TestAnchorBaseTool(unittest.TestCase):
 
         mock_function.assert_called_once_with(url="https://example.com", param1="value", param3="value3", session_id="test_session_id")
 
-    @patch('langchain_anchorbrowser.AnchorBaseTool.getpass.getpass')
-    @patch('langchain_anchorbrowser.AnchorBaseTool.Anchorbrowser')
+    @patch('getpass.getpass')
+    @patch.object(base_tool_module, 'Anchorbrowser')
     @patch.dict(os.environ, {}, clear=True)
     def test_run_uses_create_session(self, mock_anchorbrowser, mock_getpass):
         """Test that _run calls create_session (not deprecated create)"""
@@ -168,8 +173,8 @@ class TestAnchorBaseTool(unittest.TestCase):
         mock_client.sessions.create_session.assert_called_once()
         mock_client.sessions.delete_session.assert_called_once_with("sid-123")
 
-    @patch('langchain_anchorbrowser.AnchorBaseTool.getpass.getpass')
-    @patch('langchain_anchorbrowser.AnchorBaseTool.Anchorbrowser')
+    @patch('getpass.getpass')
+    @patch.object(base_tool_module, 'Anchorbrowser')
     @patch.dict(os.environ, {}, clear=True)
     def test_session_closed_when_tool_call_fails(self, mock_anchorbrowser, mock_getpass):
         mock_getpass.return_value = "test_api_key"
@@ -185,8 +190,8 @@ class TestAnchorBaseTool(unittest.TestCase):
             TestTool()._run(url="https://example.com")
         mock_client.sessions.delete_session.assert_called_once_with("sid-err")
 
-    @patch('langchain_anchorbrowser.AnchorBaseTool.getpass.getpass')
-    @patch('langchain_anchorbrowser.AnchorBaseTool.Anchorbrowser')
+    @patch('getpass.getpass')
+    @patch.object(base_tool_module, 'Anchorbrowser')
     @patch.dict(os.environ, {}, clear=True)
     def test_close_failure_does_not_mask_result(self, mock_anchorbrowser, mock_getpass):
         mock_getpass.return_value = "test_api_key"
@@ -226,8 +231,8 @@ class TestAnchorContentTool(unittest.TestCase):
         self.assertEqual(list(schema.model_fields), ["url"])
         self.assertEqual(schema(url="https://example.com").url, "https://example.com")
 
-    @patch('langchain_anchorbrowser.AnchorBaseTool.getpass.getpass')
-    @patch('langchain_anchorbrowser.AnchorBaseTool.Anchorbrowser')
+    @patch('getpass.getpass')
+    @patch.object(base_tool_module, 'Anchorbrowser')
     @patch.dict(os.environ, {}, clear=True)
     def test_legacy_format_argument_is_ignored(self, mock_anchorbrowser, mock_getpass):
         """Callers that still pass format (as in older docs) keep working"""
@@ -241,8 +246,8 @@ class TestAnchorContentTool(unittest.TestCase):
         self.assertEqual(result, "<html></html>")
         mock_client.tools.fetch_webpage.assert_called_once_with(url="https://example.com")
 
-    @patch('langchain_anchorbrowser.AnchorBaseTool.getpass.getpass')
-    @patch('langchain_anchorbrowser.AnchorBaseTool.Anchorbrowser')
+    @patch('getpass.getpass')
+    @patch.object(base_tool_module, 'Anchorbrowser')
     @patch.dict(os.environ, {}, clear=True)
     def test_content_tool_does_not_create_session(self, mock_anchorbrowser, mock_getpass):
         """Content tool should call fetch_webpage without creating a session"""
@@ -261,8 +266,8 @@ class TestAnchorContentTool(unittest.TestCase):
         mock_tools.fetch_webpage.assert_called_once_with(url="https://example.com")
         mock_client.sessions.create_session.assert_not_called()
 
-    @patch('langchain_anchorbrowser.AnchorBaseTool.getpass.getpass')
-    @patch('langchain_anchorbrowser.AnchorBaseTool.Anchorbrowser')
+    @patch('getpass.getpass')
+    @patch.object(base_tool_module, 'Anchorbrowser')
     @patch.dict(os.environ, {}, clear=True)
     def test_content_tool_execution(self, mock_anchorbrowser, mock_getpass):
         """Test content tool execution"""
@@ -325,8 +330,8 @@ class TestAnchorScreenshotTool(unittest.TestCase):
         self.assertTrue(full_input.capture_full_height)
         self.assertEqual(full_input.s3_target_address, "s3://bucket/path")
 
-    @patch('langchain_anchorbrowser.AnchorBaseTool.getpass.getpass')
-    @patch('langchain_anchorbrowser.AnchorBaseTool.Anchorbrowser')
+    @patch('getpass.getpass')
+    @patch.object(base_tool_module, 'Anchorbrowser')
     @patch.dict(os.environ, {}, clear=True)
     def test_screenshot_tool_execution(self, mock_anchorbrowser, mock_getpass):
         """Test screenshot tool execution"""
@@ -436,8 +441,8 @@ class TestAnchorWebTaskTools(unittest.TestCase):
         self.assertEqual(valid_input.prompt, "Search for Python")
         self.assertEqual(valid_input.output_schema, {"type": "object"})
 
-    @patch('langchain_anchorbrowser.AnchorBaseTool.getpass.getpass')
-    @patch('langchain_anchorbrowser.AnchorBaseTool.Anchorbrowser')
+    @patch('getpass.getpass')
+    @patch.object(base_tool_module, 'Anchorbrowser')
     @patch.dict(os.environ, {}, clear=True)
     def test_web_task_execution(self, mock_anchorbrowser, mock_getpass):
         """Test web task tool execution - result extracted from .data.result"""
@@ -482,8 +487,8 @@ class TestAnchorWebTaskTools(unittest.TestCase):
             session_id="test_session_id"
         )
 
-    @patch('langchain_anchorbrowser.AnchorBaseTool.getpass.getpass')
-    @patch('langchain_anchorbrowser.AnchorBaseTool.Anchorbrowser')
+    @patch('getpass.getpass')
+    @patch.object(base_tool_module, 'Anchorbrowser')
     @patch.dict(os.environ, {}, clear=True)
     def test_web_task_without_url(self, mock_anchorbrowser, mock_getpass):
         """Test web task execution when URL is not provided"""
@@ -516,8 +521,8 @@ class TestAnchorWebTaskTools(unittest.TestCase):
             session_id="test_session_id"
         )
 
-    @patch('langchain_anchorbrowser.AnchorBaseTool.getpass.getpass')
-    @patch('langchain_anchorbrowser.AnchorBaseTool.Anchorbrowser')
+    @patch('getpass.getpass')
+    @patch.object(base_tool_module, 'Anchorbrowser')
     @patch.dict(os.environ, {}, clear=True)
     def test_web_task_async_response(self, mock_anchorbrowser, mock_getpass):
         """Test web task tool with async response (no .result attribute)"""

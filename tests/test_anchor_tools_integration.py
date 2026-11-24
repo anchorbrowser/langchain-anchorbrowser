@@ -1,22 +1,27 @@
 import base64
+import importlib
 import json
+import os
+import sys
 import unittest
 from unittest.mock import Mock, patch
-import sys
-import os
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
 
+from langchain_anchorbrowser.AnchorBaseTool import AnchorClient
 from langchain_anchorbrowser.AnchorContentTool import AnchorContentTool
-from langchain_anchorbrowser.AnchorTaskListTool import AnchorTaskListTool
 from langchain_anchorbrowser.AnchorScreenshotTool import AnchorScreenshotTool
+from langchain_anchorbrowser.AnchorTaskListTool import AnchorTaskListTool
 from langchain_anchorbrowser.AnchorWebTaskTool import (
+    AdvancedAnchorWebTaskTool,
+    AnchorWebTaskToolKit,
     SimpleAnchorWebTaskTool,
     StandardAnchorWebTaskTool,
-    AdvancedAnchorWebTaskTool,
-    AnchorWebTaskToolKit
 )
-from langchain_anchorbrowser.AnchorBaseTool import AnchorClient
+
+# The package re-exports a class named like this module, so on Python 3.10 a dotted
+# patch target such as "langchain_anchorbrowser.AnchorBaseTool.X" resolves to the class.
+base_tool_module = importlib.import_module("langchain_anchorbrowser.AnchorBaseTool")
 
 
 class TestAnchorToolsIntegration(unittest.TestCase):
@@ -28,7 +33,7 @@ class TestAnchorToolsIntegration(unittest.TestCase):
         AnchorClient._api_key = None
 
     @patch.dict(os.environ, {'ANCHORBROWSER_API_KEY': 'test_key'})
-    @patch('langchain_anchorbrowser.AnchorBaseTool.Anchorbrowser')
+    @patch.object(base_tool_module, 'Anchorbrowser')
     def test_singleton_client_shared_across_tools(self, mock_anchorbrowser):
         """Test that all tools share the same AnchorClient singleton instance"""
         mock_anchorbrowser.return_value = Mock()
@@ -47,7 +52,7 @@ class TestAnchorToolsIntegration(unittest.TestCase):
         self.assertIs(client1, client2)
 
     @patch.dict(os.environ, {'ANCHORBROWSER_API_KEY': 'test_key'})
-    @patch('langchain_anchorbrowser.AnchorBaseTool.Anchorbrowser')
+    @patch.object(base_tool_module, 'Anchorbrowser')
     def test_web_task_toolkit_integration_with_all_tools(self, mock_anchorbrowser):
         """Test that the web task toolkit properly integrates all web task tools"""
         mock_anchorbrowser.return_value = Mock()
@@ -72,7 +77,7 @@ class TestAnchorToolsIntegration(unittest.TestCase):
         self.assertTrue(all(api_key is api_keys[0] for api_key in api_keys))
 
     @patch.dict(os.environ, {'ANCHORBROWSER_API_KEY': 'test_env_key'})
-    @patch('langchain_anchorbrowser.AnchorBaseTool.Anchorbrowser')
+    @patch.object(base_tool_module, 'Anchorbrowser')
     def test_environment_variable_integration(self, mock_anchorbrowser):
         """Test integration with environment variables for API key"""
         AnchorClient._instance = None

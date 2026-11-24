@@ -11,7 +11,7 @@ import sys
 import unittest
 
 import httpx
-from anchorbrowser import Anchorbrowser
+from anchorbrowser import Anchorbrowser, InternalServerError
 from pydantic import SecretStr
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
@@ -145,7 +145,7 @@ class TestScreenshot(SDKTestCase):
         self.api.route("POST", "/v1/tools/screenshot", lambda r: httpx.Response(
             500, json={"error": {"code": 500, "message": "Failed to take screenshot"}}))
 
-        with self.assertRaises(Exception):
+        with self.assertRaises(InternalServerError):
             AnchorScreenshotTool().invoke({"url": "https://example.com"})
 
         self.assertSessionClosed()
