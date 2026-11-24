@@ -4,8 +4,10 @@ from pydantic import BaseModel, Field
 from typing import Optional
 
 class AnchorScreenshotTool(AnchorBaseTool, BaseTool):
+    """Screenshot a webpage. Returns the image bytes (PNG or JPEG) as a base64 string."""
+
     name: str = "anchor_screenshot_tool"
-    description: str = "Take a screenshot of a webpage using Anchor Browser"
+    description: str = "Take a screenshot of a webpage using Anchor Browser. Returns the image as a base64-encoded string."
     client_function_name: str = "screenshot_webpage"
 
     class InputSchema(BaseModel):

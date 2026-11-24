@@ -1,5 +1,6 @@
+import base64
 import unittest
-from unittest.mock import Mock, patch, MagicMock
+from unittest.mock import Mock, patch
 import sys
 import os
 
@@ -165,6 +166,41 @@ class TestAnchorBaseTool(unittest.TestCase):
 
         TestTool()._run(url="https://example.com")
         mock_client.sessions.create_session.assert_called_once()
+        mock_client.sessions.delete_session.assert_called_once_with("sid-123")
+
+    @patch('langchain_anchorbrowser.AnchorBaseTool.getpass.getpass')
+    @patch('langchain_anchorbrowser.AnchorBaseTool.Anchorbrowser')
+    @patch.dict(os.environ, {}, clear=True)
+    def test_session_closed_when_tool_call_fails(self, mock_anchorbrowser, mock_getpass):
+        mock_getpass.return_value = "test_api_key"
+        mock_client = Mock()
+        mock_anchorbrowser.return_value = mock_client
+        mock_client.sessions.create_session.return_value.data.id = "sid-err"
+        mock_client.tools.test_function = Mock(side_effect=RuntimeError("boom"))
+
+        class TestTool(AnchorBaseTool):
+            client_function_name = "test_function"
+
+        with self.assertRaises(RuntimeError):
+            TestTool()._run(url="https://example.com")
+        mock_client.sessions.delete_session.assert_called_once_with("sid-err")
+
+    @patch('langchain_anchorbrowser.AnchorBaseTool.getpass.getpass')
+    @patch('langchain_anchorbrowser.AnchorBaseTool.Anchorbrowser')
+    @patch.dict(os.environ, {}, clear=True)
+    def test_close_failure_does_not_mask_result(self, mock_anchorbrowser, mock_getpass):
+        mock_getpass.return_value = "test_api_key"
+        mock_client = Mock()
+        mock_anchorbrowser.return_value = mock_client
+        mock_client.sessions.create_session.return_value.data.id = "sid-1"
+        mock_client.sessions.delete_session.side_effect = RuntimeError("already closed")
+        mock_client.tools.test_function = Mock(return_value="ok")
+
+        class TestTool(AnchorBaseTool):
+            client_function_name = "test_function"
+
+        with self.assertLogs("langchain_anchorbrowser.AnchorBaseTool", level="WARNING"):
+            self.assertEqual(TestTool()._run(url="https://example.com"), "ok")
 
 
 class TestAnchorContentTool(unittest.TestCase):
@@ -180,24 +216,30 @@ class TestAnchorContentTool(unittest.TestCase):
         tool = AnchorContentTool()
 
         self.assertEqual(tool.name, "anchor_content_tool")
-        self.assertIn("content", tool.description.lower())
+        self.assertIn("html", tool.description.lower())
         self.assertEqual(tool.client_function_name, "fetch_webpage")
         self.assertFalse(tool.needs_session)
 
     def test_input_schema_validation(self):
-        """Test input schema validation"""
-        tool = AnchorContentTool()
-        schema = tool.args_schema
+        """Only url is accepted; the endpoint has no format option"""
+        schema = AnchorContentTool().args_schema
+        self.assertEqual(list(schema.model_fields), ["url"])
+        self.assertEqual(schema(url="https://example.com").url, "https://example.com")
 
-        valid_input = schema(url="https://example.com", format="markdown")
-        self.assertEqual(valid_input.url, "https://example.com")
-        self.assertEqual(valid_input.format, "markdown")
+    @patch('langchain_anchorbrowser.AnchorBaseTool.getpass.getpass')
+    @patch('langchain_anchorbrowser.AnchorBaseTool.Anchorbrowser')
+    @patch.dict(os.environ, {}, clear=True)
+    def test_legacy_format_argument_is_ignored(self, mock_anchorbrowser, mock_getpass):
+        """Callers that still pass format (as in older docs) keep working"""
+        mock_getpass.return_value = "test_api_key"
+        mock_client = Mock()
+        mock_anchorbrowser.return_value = mock_client
+        mock_client.tools.fetch_webpage = Mock(return_value="<html></html>")
 
-        valid_input_default = schema(url="https://example.com")
-        self.assertEqual(valid_input_default.format, "markdown")
+        result = AnchorContentTool().invoke({"url": "https://example.com", "format": "markdown"})
 
-        with self.assertRaises(ValueError):
-            schema(url="https://example.com", format="invalid_format")
+        self.assertEqual(result, "<html></html>")
+        mock_client.tools.fetch_webpage.assert_called_once_with(url="https://example.com")
 
     @patch('langchain_anchorbrowser.AnchorBaseTool.getpass.getpass')
     @patch('langchain_anchorbrowser.AnchorBaseTool.Anchorbrowser')
@@ -210,12 +252,12 @@ class TestAnchorContentTool(unittest.TestCase):
         mock_client.tools = mock_tools
         mock_anchorbrowser.return_value = mock_client
 
-        mock_tools.fetch_webpage = Mock(return_value="# Example page")
+        mock_tools.fetch_webpage = Mock(return_value="<html>Example page</html>")
 
         tool = AnchorContentTool()
-        result = tool._run(url="https://example.com", format="markdown")
+        result = tool._run(url="https://example.com")
 
-        self.assertEqual(result, "# Example page")
+        self.assertEqual(result, "<html>Example page</html>")
         mock_tools.fetch_webpage.assert_called_once_with(url="https://example.com")
         mock_client.sessions.create_session.assert_not_called()
 
@@ -233,7 +275,7 @@ class TestAnchorContentTool(unittest.TestCase):
         mock_tools.fetch_webpage = Mock(return_value="<html>Test content</html>")
 
         tool = AnchorContentTool()
-        result = tool._run(url="https://example.com", format="html")
+        result = tool._run(url="https://example.com")
 
         self.assertEqual(result, "<html>Test content</html>")
         mock_tools.fetch_webpage.assert_called_once_with(url="https://example.com")
@@ -252,7 +294,7 @@ class TestAnchorScreenshotTool(unittest.TestCase):
         tool = AnchorScreenshotTool()
 
         self.assertEqual(tool.name, "anchor_screenshot_tool")
-        self.assertEqual(tool.description, "Take a screenshot of a webpage using Anchor Browser")
+        self.assertIn("base64", tool.description)
         self.assertEqual(tool.client_function_name, "screenshot_webpage")
 
     def test_input_schema_validation(self):
@@ -301,16 +343,19 @@ class TestAnchorScreenshotTool(unittest.TestCase):
         mock_session.data = mock_session_data
         mock_client.sessions.create_session.return_value = mock_session
 
+        jpeg_bytes = b"\xff\xd8\xff\xe0\x00\x10JFIF\x00\x01\xfe\x80"
         mock_response = Mock()
-        mock_response.text.return_value = "screenshot_data"
+        mock_response.read.return_value = jpeg_bytes
         mock_function = Mock(return_value=mock_response)
         mock_tools.screenshot_webpage = mock_function
 
         tool = AnchorScreenshotTool()
         result = tool._run(url="https://example.com", width=1920, height=1080)
 
-        self.assertEqual(result, "screenshot_data")
+        self.assertEqual(base64.b64decode(result, validate=True), jpeg_bytes)
+        mock_response.text.assert_not_called()
         mock_function.assert_called_once_with(url="https://example.com", width=1920, height=1080, session_id="test_session_id")
+        mock_client.sessions.delete_session.assert_called_once_with("test_session_id")
 
 
 class TestAnchorWebTaskTools(unittest.TestCase):

@@ -1,5 +1,6 @@
 from pydantic import SecretStr
-from typing import ClassVar
+from typing import Any, ClassVar
+import base64
 import logging
 from anchorbrowser import Anchorbrowser
 import getpass
@@ -33,11 +34,29 @@ class AnchorClient:
         return self._api_key, self._client
 
 
+def response_payload(response: Any) -> Any:
+    """Return the JSON payload of an anchorbrowser SDK response.
+
+    Several legacy task endpoints return their payload at the top level instead
+    of under ``data``; the SDK models keep those keys as extra fields.
+    Empty responses (e.g. HTTP 204) come back as ``""`` and yield ``{}``.
+    The SDK builds models without validation, so typed fields (UUIDs, datetimes)
+    still hold raw strings; serializer warnings about that are suppressed.
+    """
+    data = getattr(response, "data", None)
+    if data is not None:
+        return data.model_dump(warnings=False)
+    if hasattr(response, "model_dump"):
+        return response.model_dump(exclude={"data"}, warnings=False)
+    return {}
+
+
 class AnchorBaseTool:
     """Base class for Anchor Browser tools.
 
     Provides shared client initialization and a default _run implementation
-    that creates a browser session before invoking the requested tool function.
+    that creates a browser session, invokes the requested tool function and
+    closes the session again.
 
     Class attributes:
         client_function_name: Name of the method on ``client.tools`` to call.
@@ -69,44 +88,50 @@ class AnchorBaseTool:
         return self._anchor_logger
 
     def _run(self, **kwargs) -> str:
-        """Call the configured tool function, optionally pre-creating a session."""
-        start_time = time.time()
-
-        request_body = {k: v for k, v in kwargs.items() if v is not None}
-
+        """Call the configured tool function inside a short-lived browser session."""
         function_name = self.client_function_name
         if not function_name:
             raise ValueError(f"client_function_name not set for {self.__class__.__name__}")
 
+        request_body = {k: v for k, v in kwargs.items() if v is not None}
+        if function_name == "perform_web_task" and "url" not in request_body:
+            request_body["url"] = "https://example.com"
+            request_body["prompt"] += ". Ignore the starting url."
+
+        start_time = time.time()
+        session_id = None
         if self.needs_session:
-            if function_name == "perform_web_task" and "url" not in request_body:
-                request_body["url"] = "https://example.com"
-                request_body["prompt"] += ". Ignore the starting url."
-
             session = self.client.sessions.create_session()
-            live_view_url = session.data.live_view_url if session.data else None
-            self.logger.info(f"Session Information: {session.data}")
-            if live_view_url:
-                self.logger.info(f"Live view URL: {live_view_url}")
-            request_body["session_id"] = session.data.id if session.data else None
+            # session.data also carries cdp_url, a credential-bearing websocket URL: never log it.
+            session_id = session.data.id if session.data else None
+            if session_id:
+                request_body["session_id"] = session_id
+                self.logger.info("Created Anchor session %s", session_id)
 
-        client_func = getattr(self.client.tools, function_name)
-        self.logger.info(f"Calling {function_name} for: {kwargs.get('url', '')}")
-        result = client_func(**request_body)
+        try:
+            client_func = getattr(self.client.tools, function_name)
+            result = client_func(**request_body)
+        finally:
+            if session_id:
+                self._close_session(session_id)
 
-        execution_time = time.time() - start_time
-        self.logger.info(f"{function_name} completed in {execution_time:.2f}s")
+        self.logger.info("%s completed in %.2fs", function_name, time.time() - start_time)
 
         if function_name == "screenshot_webpage":
-            return result.text()
+            return base64.b64encode(result.read()).decode("ascii")
         elif function_name == "perform_web_task":
             # result.data is PerformWebTaskSyncResponseData or PerformWebTaskAsyncResponseData
             if result.data is None:
                 return ""
             if hasattr(result.data, "result"):
-                # Sync response: .result is dict[str, Any]
-                return json.dumps(result.data.result)
-            # Async response: return workflow_id and status
-            return json.dumps(result.data.model_dump())
+                return json.dumps(result.data.result, default=str)
+            return json.dumps(result.data.model_dump(), default=str)
         else:
             return result
+
+    def _close_session(self, session_id: str) -> None:
+        try:
+            self.client.sessions.delete_session(session_id)
+            self.logger.info("Closed Anchor session %s", session_id)
+        except Exception:
+            self.logger.warning("Failed to close Anchor session %s", session_id, exc_info=True)
