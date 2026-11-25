@@ -1,15 +1,16 @@
-import sys
-import os
 import json
+import os
+import sys
+
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "src")))
 
 from langchain_anchorbrowser import (
     AnchorTaskCreateTool,
-    AnchorTaskListTool,
-    AnchorTaskDeleteTool,
-    AnchorTaskRunTool,
+    AnchorTaskDeleteTool,  # noqa: F401 (used by the optional cleanup block at the end)
     AnchorTaskDeployTool,
     AnchorTaskListExecutionsTool,
+    AnchorTaskListTool,
+    AnchorTaskRunTool,
     AnchorTaskToolKit,
 )
 
@@ -32,12 +33,12 @@ try:
         "limit": "10"
     })
     tasks_data = json.loads(tasks_result)
-    tasks_list = tasks_data.get('data', {}).get('tasks', [])
-    total = tasks_data.get('data', {}).get('total', 0)
+    tasks_list = tasks_data.get('tasks', [])
+    total = tasks_data.get('total', 0)
     print(f"Found {len(tasks_list)} task(s) (in page 1, total: {total})")
-    if tasks_list:
-        for task in tasks_list:  # Show first 3
-            print(f"  - {task.get('name')} (ID: {task.get('id', 'N/A')}) {"--DELETED" if task.get('deleted', False) else ""}")
+    for task in tasks_list:
+        deleted = " --DELETED" if task.get('deleted', False) else ""
+        print(f"  - {task.get('name')} (ID: {task.get('id', 'N/A')}){deleted}")
 except Exception as e:
     print(f"Error listing tasks: {e}")
 
@@ -60,9 +61,8 @@ try:
         "language": "typescript",
         "code": task_code
     })
-    create_data = json.loads(create_result)
-    task_id = create_data.get("data", {}).get("id") or create_data.get("id")
-    print(f"Task created successfully!")
+    task_id = json.loads(create_result).get("data", {}).get("id")
+    print("Task created successfully!")
     print(f"Task ID: {task_id}")
     print(f"Task Name: {task_name}")
 except Exception as e:
@@ -72,15 +72,15 @@ except Exception as e:
     try:
         tasks_result = list_tool.invoke({"page": "1", "limit": "10"})
         tasks_data = json.loads(tasks_result)
-        tasks_list = tasks_data.get('data', {}).get('tasks', [])
+        tasks_list = tasks_data.get('tasks', [])
         for task in tasks_list:
             if 'demo-task' in task.get('name', ''):
                 task_id = task.get('id')
                 task_name = task.get('name')
                 print(f"Using existing task: {task_name} (ID: {task_id})")
                 break
-    except:
-        pass
+    except Exception as list_error:
+        print(f"Could not list tasks: {list_error}")
 
 if not task_id:
     print("Could not create or find a task. Exiting demo.")
@@ -97,13 +97,12 @@ deploy_tool = AnchorTaskDeployTool()
 try:
     deploy_result = deploy_tool.invoke({
         "task_id": task_id,
-        "version": "1",
         "code": task_code
     })
-    deploy_data = json.loads(deploy_result)
+    version = json.loads(deploy_result).get("data", {}).get("version")
     print("Task deployed successfully!")
-    if deploy_data.get("version"):
-        print(f"Version: {deploy_data.get('version')}")
+    if version:
+        print(f"Version: {version}")
 except Exception as e:
     print(f"Deploy failed (task may already have code deployed): {e}")
 
@@ -125,13 +124,11 @@ try:
         # session_id is not passed - system will create a new session automatically
         "inputs": inputs_json  # Optional: environment variables (keys must start with ANCHOR_)
     })
-    run_data = json.loads(run_result)
+    run_data = json.loads(run_result).get("data", {})
     print("Task execution started!")
-    execution_id = run_data.get("execution_id") or run_data.get("id")
-    if execution_id:
-        print(f"Execution ID: {execution_id}")
-    if run_data.get("status"):
-        print(f"Status: {run_data.get('status')}")
+    if run_data.get("executionResultId"):
+        print(f"Execution ID: {run_data['executionResultId']}")
+    print(f"Success: {run_data.get('success')} ({run_data.get('message')})")
 except Exception as e:
     print(f"Run task error: {e}")
 
@@ -197,13 +194,13 @@ for tool in tools:
     print(f"  - {tool.name}")
 
 # Example: Use a tool from the toolkit
-print(f"\nUsing 'list_tasks' from toolkit:")
+print("\nUsing 'list_tasks' from toolkit:")
 list_tool_from_kit = next(t for t in tools if t.name == "list_tasks")
 try:
     result = list_tool_from_kit.invoke({"page": "1", "limit": "3"})
     result_data = json.loads(result)
-    tasks_list = result_data.get('data', {}).get('tasks', [])
-    total = result_data.get('data', {}).get('total', 0)
+    tasks_list = result_data.get('tasks', [])
+    total = result_data.get('total', 0)
     print(f"  Found {len(tasks_list)} task(s) (total: {total})")
 except Exception as e:
     print(f"  Error: {e}")
